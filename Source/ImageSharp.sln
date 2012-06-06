@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSharp", "ImageSharp\ImageSharp.csproj", "{AB214C99-4095-4874-85B9-27514EA9E34E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AB214C99-4095-4874-85B9-27514EA9E34E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB214C99-4095-4874-85B9-27514EA9E34E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB214C99-4095-4874-85B9-27514EA9E34E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB214C99-4095-4874-85B9-27514EA9E34E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
