@@ -1,16 +1,15 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ImageSharp")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Standalone managed library for loading images of different formats")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("ImageSharp")]
-[assembly: AssemblyCopyright("Copyright ©  2012")]
+[assembly: AssemblyCopyright("Copyright © 2012 Daniil Rodin")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
