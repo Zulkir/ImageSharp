@@ -28,6 +28,6 @@ namespace ImageSharp.PNG
     public class Chunk
     {
         public int Length { get; private set; }
-
+        public ChunkType ChunkType { get; private set; }
     }
 }

@@ -34,6 +34,11 @@ namespace ImageSharp.PNG
 
         public uint Value { get { return value; } }
 
+        public ChunkType(uint value)
+        {
+            this.value = value;
+        }
+
         public unsafe ChunkType(char ch0, char ch1, char ch2, char ch3)
         {
             uint temp;
@@ -45,6 +50,26 @@ namespace ImageSharp.PNG
             value = temp;
         }
 
+        public unsafe ChunkType(string text)
+        {
+            if (text.Length != 4)
+                throw new AggregateException("'text' must be exactly four ASCII characters");
+
+            uint temp;
+            var p = (sbyte*)&temp;
+            p[0] = (sbyte)text[0];
+            p[1] = (sbyte)text[1];
+            p[2] = (sbyte)text[2];
+            p[3] = (sbyte)text[3];
+            value = temp;
+        }
+
+        public bool IsCritical { get { return (value & 0x00000020) == 0; } }
+        public bool IsPublic { get { return (value & 0x00002000) == 0; } }
+        public bool IsClassic { get { return (value & 0x00200000) == 0; } }
+        public bool IsUnsafeToCopy { get { return (value & 0x20000000) == 0; } }
+
+        #region IEquatable implementation and Object overrides
         public bool Equals(ChunkType other)
         {
             return value == other.value;
@@ -68,5 +93,18 @@ namespace ImageSharp.PNG
             var p = (sbyte*)&temp;
             return new string(p, 0, 4, Encoding.ASCII);
         }
+        #endregion
+
+        static readonly ChunkType _IHDR = new ChunkType("IHDR");
+        public static ChunkType IHDR { get { return _IHDR; } }
+
+        static readonly ChunkType _PLTE = new ChunkType("PLTE");
+        public static ChunkType PLTE { get { return _PLTE; } }
+
+        static readonly ChunkType _IDAT = new ChunkType("IDAT");
+        public static ChunkType IDAT { get { return _IDAT; } }
+
+        static readonly ChunkType _IEND = new ChunkType("IEND");
+        public static ChunkType IEND { get { return _IEND; } } 
     }
 }
