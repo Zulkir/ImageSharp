@@ -25,16 +25,12 @@ freely, subject to the following restrictions:
 
 namespace ImageSharp.PNG
 {
-    public class PngImage
+    public enum BitDepth : byte
     {
-        int width;
-        int height;
-        BitDepth bitDepth;
-        ColorType colorType;
-        CompressionMethod compressionMethod;
-        FilterMethod filterMethod;
-        InterlaceMethod interlaceMethod;
-
-
+        One = 1,
+        Two = 2,
+        Four = 4,
+        Eight = 8,
+        Sixteen = 16
     }
 }

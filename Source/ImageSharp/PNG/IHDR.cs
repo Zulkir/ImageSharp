@@ -25,17 +25,27 @@ freely, subject to the following restrictions:
 
 namespace ImageSharp.PNG
 {
-    public class Chunk
+    class IHDR : Chunk
     {
-        public int Length { get; private set; }
-        public ChunkType ChunkType { get; private set; }
-        public int CyclicRedundancyCheck { get; private set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public byte BitDepth { get; private set; }
+        public ColorType ColorType { get; private set; }
+        public CompressionMethod CompressionMethod { get; private set; }
+        public FilterMethod FilterMethod { get; private set; }
+        public InterlaceMethod InterlaceMethod { get; private set; }
 
-        public Chunk(int length, ChunkType chunkType, int crc)
+        public IHDR(int length, ChunkType chunkType, int crc, 
+            int width, int height, ColorType colorType, CompressionMethod compressionMethod, 
+            FilterMethod filterMethod, InterlaceMethod interlaceMethod) 
+            : base(length, chunkType, crc)
         {
-            Length = length;
-            ChunkType = chunkType;
-            CyclicRedundancyCheck = crc;
+            Width = width;
+            Height = height;
+            ColorType = colorType;
+            CompressionMethod = compressionMethod;
+            FilterMethod = filterMethod;
+            InterlaceMethod = interlaceMethod;
         }
     }
 }
