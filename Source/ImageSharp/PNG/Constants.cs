@@ -23,38 +23,12 @@ freely, subject to the following restrictions:
 */
 #endregion
 
-using System.IO;
-
 namespace ImageSharp.PNG
 {
-    public class PngImage
+    public static class Constants
     {
-        int width;
-        int height;
-        BitDepth bitDepth;
-        ColorType colorType;
-        CompressionMethod compressionMethod;
-        FilterMethod filterMethod;
-        InterlaceMethod interlaceMethod;
-
-        public unsafe PngImage(byte[] fileData, int byteOffset = 0)
-        {
-            fixed (byte* data = fileData)
-            {
-                byte* p = data;
-                int remaining = fileData.Length - byteOffset;
-
-                // Signature
-                if (remaining < 8) 
-                    throw new InvalidDataException("The file data ends abruptly");
-                if (*(ulong*)p != Constants.PngSignature)
-                    throw new InvalidDataException("PNG signature is missing or incorect");
-                p += 8;
-                remaining -= 8;
-
-                // IHDR
-
-            }
-        }
+        public const ulong PngSignature = (137ul << 56 | 80ul << 48 | 78ul << 40 | 71ul << 32 | 13ul << 24 | 10ul << 16 | 26ul << 8 | 10ul);
+        public const int ChunkOverheadLength = 12;
+        public const int LengthOfIHDR = 13;
     }
 }
