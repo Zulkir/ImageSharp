@@ -25,7 +25,7 @@ freely, subject to the following restrictions:
 
 namespace ImageSharp.PNG
 {
-    public enum FilterMethod
+    public enum FilterMethod : byte
     {
         Adaptive5 = 0
     }

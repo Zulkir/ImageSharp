@@ -29,6 +29,6 @@ namespace ImageSharp.PNG
     {
         public const ulong PngSignature = (137ul << 56 | 80ul << 48 | 78ul << 40 | 71ul << 32 | 13ul << 24 | 10ul << 16 | 26ul << 8 | 10ul);
         public const int ChunkOverheadLength = 12;
-        public const int LengthOfIHDR = 13;
+        public const uint IHDR = ((uint) 'I' << 24 | (uint) 'H' << 16 | (uint) 'D' << 8 | (uint) 'R');
     }
 }

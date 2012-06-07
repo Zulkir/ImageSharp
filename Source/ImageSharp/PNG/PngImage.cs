@@ -47,13 +47,31 @@ namespace ImageSharp.PNG
                 // Signature
                 if (remaining < 8) 
                     throw new InvalidDataException("The file data ends abruptly");
+                remaining -= 8;
+
                 if (*(ulong*)p != Constants.PngSignature)
                     throw new InvalidDataException("PNG signature is missing or incorect");
                 p += 8;
-                remaining -= 8;
-
+                
                 // IHDR
+                if (remaining < Header.StructLength)
+                    throw new InvalidDataException("The file data ends abruptly");
+                remaining -= Header.StructLength;
 
+                var pHeader = (Header*) p;
+
+                if (pHeader->ChunkType.Value != Constants.IHDR)
+                    throw new InvalidDataException(string.Format("IHDR chunk expected, but {0} found.", pHeader->ChunkType.ToString()));
+                if (pHeader->Length != Header.DataLength)
+                    throw new InvalidDataException("IHDR length must be exactly 13 bytes");
+
+                width = pHeader->Width;
+                height = pHeader->Height;
+                bitDepth = pHeader->BitDepth;
+                colorType = pHeader->ColorType;
+                compressionMethod = pHeader->CompressionMethod;
+                filterMethod = pHeader->FilterMethod;
+                interlaceMethod = pHeader->InterlaceMethod;
             }
         }
     }

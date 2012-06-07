@@ -25,7 +25,7 @@ freely, subject to the following restrictions:
 
 namespace ImageSharp.PNG
 {
-    public enum InterlaceMethod
+    public enum InterlaceMethod : byte
     {
         NoInterlace = 0,
         Adam7 = 1

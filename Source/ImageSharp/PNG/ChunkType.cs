@@ -30,13 +30,11 @@ namespace ImageSharp.PNG
 {
     public struct ChunkType : IEquatable<ChunkType>
     {
-        readonly uint value;
-
-        public uint Value { get { return value; } }
+        internal uint Value;
 
         public ChunkType(uint value)
         {
-            this.value = value;
+            Value = value;
         }
 
         public unsafe ChunkType(char ch0, char ch1, char ch2, char ch3)
@@ -47,7 +45,7 @@ namespace ImageSharp.PNG
             p[1] = (sbyte)ch1;
             p[2] = (sbyte)ch2;
             p[3] = (sbyte)ch3;
-            value = temp;
+            Value = temp;
         }
 
         public unsafe ChunkType(string text)
@@ -61,18 +59,18 @@ namespace ImageSharp.PNG
             p[1] = (sbyte)text[1];
             p[2] = (sbyte)text[2];
             p[3] = (sbyte)text[3];
-            value = temp;
+            Value = temp;
         }
 
-        public bool IsCritical { get { return (value & 0x00000020) == 0; } }
-        public bool IsPublic { get { return (value & 0x00002000) == 0; } }
-        public bool IsClassic { get { return (value & 0x00200000) == 0; } }
-        public bool IsUnsafeToCopy { get { return (value & 0x20000000) == 0; } }
+        public bool IsCritical { get { return (Value & 0x00000020) == 0; } }
+        public bool IsPublic { get { return (Value & 0x00002000) == 0; } }
+        public bool IsClassic { get { return (Value & 0x00200000) == 0; } }
+        public bool IsUnsafeToCopy { get { return (Value & 0x20000000) == 0; } }
 
         #region IEquatable implementation and Object overrides
         public bool Equals(ChunkType other)
         {
-            return value == other.value;
+            return Value == other.Value;
         }
 
         public override bool Equals(object obj)
@@ -84,12 +82,12 @@ namespace ImageSharp.PNG
 
         public override int GetHashCode()
         {
-            return (int)value;
+            return (int)Value;
         }
 
         public unsafe override string ToString()
         {
-            uint temp = value;
+            uint temp = Value;
             var p = (sbyte*)&temp;
             return new string(p, 0, 4, Encoding.ASCII);
         }

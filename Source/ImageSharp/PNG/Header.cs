@@ -23,8 +23,11 @@ freely, subject to the following restrictions:
 */
 #endregion
 
+using System.Runtime.InteropServices;
+
 namespace ImageSharp.PNG
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct Header
     {
         public int Length;
@@ -37,5 +40,8 @@ namespace ImageSharp.PNG
         public FilterMethod FilterMethod;
         public InterlaceMethod InterlaceMethod;
         public int Crc;
+
+        public const int DataLength = 13;
+        public const int StructLength = 25;
     }
 }
