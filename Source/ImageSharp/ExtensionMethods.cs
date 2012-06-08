@@ -27,7 +27,7 @@ namespace ImageSharp
 {
     public static class ExtensionMethods
     {
-        public static uint FlipEndianess(this uint n)
+        public static uint FlipEndianness(this uint n)
         {
             return ((n & 0x000000ff) << 24) | ((n & 0x0000ff00) << 8) | ((n & 0x00ff0000) >> 8) | (n >> 24);
         }
