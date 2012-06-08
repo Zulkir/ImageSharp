@@ -29,25 +29,16 @@ namespace ImageSharp.PNG
 {
     public class PngImage
     {
-        readonly uint width;
-        readonly uint height;
-        readonly BitDepth bitDepth;
-        readonly ColorType colorType;
-        readonly CompressionMethod compressionMethod;
-        readonly FilterMethod filterMethod;
-        readonly InterlaceMethod interlaceMethod;
+        public uint Width { get; private set; }
+        public uint Height { get; private set; }
+        public BitDepth BitDepth { get; private set; }
+        public ColorType ColorType { get; private set; }
+        public CompressionMethod CompressionMethod { get; private set; }
+        public FilterMethod FilterMethod { get; private set; }
+        public InterlaceMethod InterlaceMethod { get; private set; }
+        public Palette Palette { get; private set; }
 
-        readonly Palette palette;
-
-        public uint Width { get { return width; } }
-        public uint Height { get { return height; } }
-        public BitDepth BitDepth { get { return bitDepth; } }
-        public ColorType ColorType { get { return colorType; } }
-        public CompressionMethod CompressionMethod { get { return compressionMethod; } }
-        public FilterMethod FilterMethod { get { return filterMethod; } }
-        public InterlaceMethod InterlaceMethod { get { return interlaceMethod; } }
-
-        public Palette Palette { get { return palette; } }
+        //readonly byte[] transparency;
 
         public unsafe PngImage(byte[] fileData, int byteOffset = 0)
         {
@@ -75,18 +66,20 @@ namespace ImageSharp.PNG
 
                 if (pHeader->ChunkType.Value != Constants.IHDR)
                     throw new InvalidDataException(string.Format("IHDR chunk expected, but {0} found.", pHeader->ChunkType.ToString()));
-                if (pHeader->Length.FlipEndianness() != Header.DataLength)
+                if (pHeader->LengthFlipped.FlipEndianness() != Header.DataLength)
                     throw new InvalidDataException("IHDR length must be exactly 13 bytes");
 
-                width = pHeader->Width.FlipEndianness();
-                height = pHeader->Height.FlipEndianness();
-                bitDepth = pHeader->BitDepth;
-                colorType = pHeader->ColorType;
-                compressionMethod = pHeader->CompressionMethod;
-                filterMethod = pHeader->FilterMethod;
-                interlaceMethod = pHeader->InterlaceMethod;
+                Width = pHeader->WidthFlipped.FlipEndianness();
+                Height = pHeader->HeightFlipped.FlipEndianness();
+                BitDepth = pHeader->BitDepth;
+                ColorType = pHeader->ColorType;
+                CompressionMethod = pHeader->CompressionMethod;
+                FilterMethod = pHeader->FilterMethod;
+                InterlaceMethod = pHeader->InterlaceMethod;
 
-                while (true)
+                bool endFound = false;
+
+                while (!endFound)
                 {
                     if (remaining < ChunkBeginning.StructLength)
                         throw new InvalidDataException("The file data ends abruptly");
@@ -95,20 +88,42 @@ namespace ImageSharp.PNG
                     var pChunkBeginning = (ChunkBeginning*) p;
                     p += ChunkBeginning.StructLength;
 
+                    int length = (int)pChunkBeginning->LengthFlipped.FlipEndianness();
+
+                    byte* chunkData = p;
+                    p += length;
+
+                    uint crc = (*(uint*) p).FlipEndianness();
+                    p += 4;
+
+                    // todo: check CRC
+
                     switch (pChunkBeginning->ChunkType.Value)
                     {
                         case Constants.PLTE:
                         {
-                            if (remaining < pChunkBeginning->Length + 4)
+                            if (Palette != null)
+                                throw new InvalidDataException("PLTE chunk appears twice");
+
+                            if (remaining < length + 4)
                                 throw new InvalidDataException("The file data ends abruptly");
-                            remaining -= (int)pChunkBeginning->Length + 4;
+                            remaining -= length + 4;
 
-                            var pEntries = (PaletteEntry*) p;
-                            p += (int)pChunkBeginning->Length + 4;
+                            Palette = new Palette((PaletteEntry*)chunkData, length / 3);
+                            break;
+                        } 
+                        case Constants.IDAT:
+                        {
+                            break;
+                        } 
+                        case Constants.IEND:
+                        {
+                            if (length != 0)
+                                throw new InvalidDataException("IEND chunk must be empty");
 
-                            palette = new Palette(pEntries, (int)pChunkBeginning->Length / 3);
+                            endFound = true;
+                            break;
                         }
-                        break;
                     }
                 }
             }

@@ -30,16 +30,16 @@ namespace ImageSharp.PNG
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct Header
     {
-        public uint Length;
+        public uint LengthFlipped;
         public ChunkType ChunkType;
-        public uint Width;
-        public uint Height;
+        public uint WidthFlipped;
+        public uint HeightFlipped;
         public BitDepth BitDepth;
         public ColorType ColorType;
         public CompressionMethod CompressionMethod;
         public FilterMethod FilterMethod;
         public InterlaceMethod InterlaceMethod;
-        public uint Crc;
+        public uint CrcFlipped;
 
         public const int DataLength = 13;
         public const int StructLength = 25;

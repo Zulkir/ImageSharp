@@ -30,9 +30,9 @@ namespace ImageSharp.PNG
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct ChunkBeginning
     {
-        public uint Length;
+        public uint LengthFlipped;
         public ChunkType ChunkType;
-
+        
         public const int StructLength = 8;
     }
 }
