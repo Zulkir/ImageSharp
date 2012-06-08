@@ -23,12 +23,19 @@ freely, subject to the following restrictions:
 */
 #endregion
 
-namespace ImageSharp.PNG
+using System;
+using System.IO;
+using ImageSharp.PNG;
+
+namespace ImageSharp.ConsoleTester
 {
-    public static class Constants
+    class Program
     {
-        public const ulong PngSignature = (137ul  | 80ul << 8 | 78ul << 16 | 71ul << 24 | 13ul << 32 | 10ul << 40 | 26ul << 48 | 10ul << 56);
-        public const uint ChunkOverheadLength = 12;
-        public const uint IHDR = ((uint) 'I' | (uint) 'H' << 8 | (uint) 'D' << 16 | (uint) 'R' << 24);
+        static void Main(string[] args)
+        {
+            byte[] data = File.ReadAllBytes("../Textures/Img.png");
+            PngImage pngImage = new PngImage(data);
+            Console.WriteLine(pngImage.ToString());
+        }
     }
 }

@@ -41,7 +41,7 @@ namespace ImageSharp.PNG
         public InterlaceMethod InterlaceMethod;
         public uint Crc;
 
-        public const uint DataLength = 13;
-        public const uint StructLength = 25;
+        public const int DataLength = 13;
+        public const int StructLength = 25;
     }
 }

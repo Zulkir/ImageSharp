@@ -62,16 +62,18 @@ namespace ImageSharp.PNG
 
                 if (pHeader->ChunkType.Value != Constants.IHDR)
                     throw new InvalidDataException(string.Format("IHDR chunk expected, but {0} found.", pHeader->ChunkType.ToString()));
-                if (pHeader->Length != Header.DataLength)
+                if (pHeader->Length.FlipEndianness() != Header.DataLength)
                     throw new InvalidDataException("IHDR length must be exactly 13 bytes");
 
-                width = pHeader->Width;
-                height = pHeader->Height;
+                width = pHeader->Width.FlipEndianness();
+                height = pHeader->Height.FlipEndianness();
                 bitDepth = pHeader->BitDepth;
                 colorType = pHeader->ColorType;
                 compressionMethod = pHeader->CompressionMethod;
                 filterMethod = pHeader->FilterMethod;
                 interlaceMethod = pHeader->InterlaceMethod;
+
+
             }
         }
     }
