@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExtensionMethods.cs" />
     <Compile Include="PNG\BitDepth.cs" />
     <Compile Include="PNG\Chunk.cs" />
     <Compile Include="PNG\ChunkType.cs" />

@@ -27,11 +27,11 @@ namespace ImageSharp.PNG
 {
     public class Chunk
     {
-        public int Length { get; private set; }
+        public uint Length { get; private set; }
         public ChunkType ChunkType { get; private set; }
-        public int CyclicRedundancyCheck { get; private set; }
+        public uint CyclicRedundancyCheck { get; private set; }
 
-        public Chunk(int length, ChunkType chunkType, int crc)
+        public Chunk(uint length, ChunkType chunkType, uint crc)
         {
             Length = length;
             ChunkType = chunkType;

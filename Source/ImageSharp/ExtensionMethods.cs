@@ -23,12 +23,13 @@ freely, subject to the following restrictions:
 */
 #endregion
 
-namespace ImageSharp.PNG
+namespace ImageSharp
 {
-    public static class Constants
+    public static class ExtensionMethods
     {
-        public const ulong PngSignature = (137ul << 56 | 80ul << 48 | 78ul << 40 | 71ul << 32 | 13ul << 24 | 10ul << 16 | 26ul << 8 | 10ul);
-        public const uint ChunkOverheadLength = 12;
-        public const uint IHDR = ((uint) 'I' << 24 | (uint) 'H' << 16 | (uint) 'D' << 8 | (uint) 'R');
+        public static uint FlipEndianess(this uint n)
+        {
+            return ((n & 0x000000ff) << 24) | ((n & 0x0000ff00) << 8) | ((n & 0x00ff0000) >> 8) | (n >> 24);
+        }
     }
 }

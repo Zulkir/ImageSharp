@@ -29,8 +29,8 @@ namespace ImageSharp.PNG
 {
     public class PngImage
     {
-        int width;
-        int height;
+        uint width;
+        uint height;
         BitDepth bitDepth;
         ColorType colorType;
         CompressionMethod compressionMethod;
