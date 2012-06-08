@@ -25,11 +25,26 @@ freely, subject to the following restrictions:
 
 namespace ImageSharp.PNG
 {
-    public static class Constants
+    public class Palette
     {
-        public const ulong PngSignature = (137ul  | 80ul << 8 | 78ul << 16 | 71ul << 24 | 13ul << 32 | 10ul << 40 | 26ul << 48 | 10ul << 56);
-        public const uint ChunkOverheadLength = 12;
-        public const uint IHDR = ((uint) 'I' | (uint) 'H' << 8 | (uint) 'D' << 16 | (uint) 'R' << 24);
-        public const uint PLTE = ((uint)'P' | (uint)'L' << 8 | (uint)'T' << 16 | (uint)'E' << 24);
+        internal PaletteEntry[] Entries { get; private set; }
+
+        public PaletteEntry this[int index] { get { return Entries[index]; } }
+        public PaletteEntry GetEntry(int index) { return Entries[index]; }
+        public int Count { get { return Entries.Length; } }
+
+        public unsafe Palette(PaletteEntry* p, int count)
+        {
+            Entries = new PaletteEntry[count];
+            // todo: memcpy
+            fixed (PaletteEntry* pEntries = Entries)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    pEntries[i] = *p;
+                    p += PaletteEntry.StructLength;
+                }
+            }
+        }
     }
 }

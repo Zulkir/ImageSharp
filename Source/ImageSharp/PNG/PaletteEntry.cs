@@ -23,19 +23,17 @@ freely, subject to the following restrictions:
 */
 #endregion
 
+using System.Runtime.InteropServices;
+
 namespace ImageSharp.PNG
 {
-    public class Chunk
+    [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 3)]
+    public struct PaletteEntry
     {
-        public uint Length { get; private set; }
-        public ChunkType ChunkType { get; private set; }
-        public uint CyclicRedundancyCheck { get; private set; }
+        public byte Red;
+        public byte Green;
+        public byte Blue;
 
-        public Chunk(uint length, ChunkType chunkType, uint crc)
-        {
-            Length = length;
-            ChunkType = chunkType;
-            CyclicRedundancyCheck = crc;
-        }
+        public const int StructLength = 3;
     }
 }

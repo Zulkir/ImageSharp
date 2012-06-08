@@ -23,13 +23,16 @@ freely, subject to the following restrictions:
 */
 #endregion
 
+using System.Runtime.InteropServices;
+
 namespace ImageSharp.PNG
 {
-    public static class Constants
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct ChunkBeginning
     {
-        public const ulong PngSignature = (137ul  | 80ul << 8 | 78ul << 16 | 71ul << 24 | 13ul << 32 | 10ul << 40 | 26ul << 48 | 10ul << 56);
-        public const uint ChunkOverheadLength = 12;
-        public const uint IHDR = ((uint) 'I' | (uint) 'H' << 8 | (uint) 'D' << 16 | (uint) 'R' << 24);
-        public const uint PLTE = ((uint)'P' | (uint)'L' << 8 | (uint)'T' << 16 | (uint)'E' << 24);
+        public uint Length;
+        public ChunkType ChunkType;
+
+        public const int StructLength = 8;
     }
 }

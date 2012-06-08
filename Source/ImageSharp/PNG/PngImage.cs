@@ -29,13 +29,25 @@ namespace ImageSharp.PNG
 {
     public class PngImage
     {
-        uint width;
-        uint height;
-        BitDepth bitDepth;
-        ColorType colorType;
-        CompressionMethod compressionMethod;
-        FilterMethod filterMethod;
-        InterlaceMethod interlaceMethod;
+        readonly uint width;
+        readonly uint height;
+        readonly BitDepth bitDepth;
+        readonly ColorType colorType;
+        readonly CompressionMethod compressionMethod;
+        readonly FilterMethod filterMethod;
+        readonly InterlaceMethod interlaceMethod;
+
+        readonly Palette palette;
+
+        public uint Width { get { return width; } }
+        public uint Height { get { return height; } }
+        public BitDepth BitDepth { get { return bitDepth; } }
+        public ColorType ColorType { get { return colorType; } }
+        public CompressionMethod CompressionMethod { get { return compressionMethod; } }
+        public FilterMethod FilterMethod { get { return filterMethod; } }
+        public InterlaceMethod InterlaceMethod { get { return interlaceMethod; } }
+
+        public Palette Palette { get { return palette; } }
 
         public unsafe PngImage(byte[] fileData, int byteOffset = 0)
         {
@@ -59,6 +71,7 @@ namespace ImageSharp.PNG
                 remaining -= Header.StructLength;
 
                 var pHeader = (Header*) p;
+                p += Header.StructLength;
 
                 if (pHeader->ChunkType.Value != Constants.IHDR)
                     throw new InvalidDataException(string.Format("IHDR chunk expected, but {0} found.", pHeader->ChunkType.ToString()));
@@ -73,7 +86,31 @@ namespace ImageSharp.PNG
                 filterMethod = pHeader->FilterMethod;
                 interlaceMethod = pHeader->InterlaceMethod;
 
+                while (true)
+                {
+                    if (remaining < ChunkBeginning.StructLength)
+                        throw new InvalidDataException("The file data ends abruptly");
+                    remaining -= ChunkBeginning.StructLength;
 
+                    var pChunkBeginning = (ChunkBeginning*) p;
+                    p += ChunkBeginning.StructLength;
+
+                    switch (pChunkBeginning->ChunkType.Value)
+                    {
+                        case Constants.PLTE:
+                        {
+                            if (remaining < pChunkBeginning->Length + 4)
+                                throw new InvalidDataException("The file data ends abruptly");
+                            remaining -= (int)pChunkBeginning->Length + 4;
+
+                            var pEntries = (PaletteEntry*) p;
+                            p += (int)pChunkBeginning->Length + 4;
+
+                            palette = new Palette(pEntries, (int)pChunkBeginning->Length / 3);
+                        }
+                        break;
+                    }
+                }
             }
         }
     }

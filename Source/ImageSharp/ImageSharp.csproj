@@ -44,7 +44,7 @@
   <ItemGroup>
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="PNG\BitDepth.cs" />
-    <Compile Include="PNG\Chunk.cs" />
+    <Compile Include="PNG\ChunkBeginning.cs" />
     <Compile Include="PNG\ChunkType.cs" />
     <Compile Include="PNG\ColorType.cs" />
     <Compile Include="PNG\CompressionMethod.cs" />
@@ -52,6 +52,8 @@
     <Compile Include="PNG\FilterMethod.cs" />
     <Compile Include="PNG\Header.cs" />
     <Compile Include="PNG\InterlaceMethod.cs" />
+    <Compile Include="PNG\Palette.cs" />
+    <Compile Include="PNG\PaletteEntry.cs" />
     <Compile Include="PNG\PngImage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
