@@ -25,31 +25,11 @@ freely, subject to the following restrictions:
 
 using System;
 
-namespace ImageSharp.PNG
+namespace ImageSharp
 {
-    public class Palette
+    public struct PointerLengthPair
     {
-        public PaletteEntry[] Entries { get; set; }
-
-        public Palette(PaletteEntry[] entries)
-        {
-            if (entries == null)
-                throw new ArgumentNullException("entries");
-            Entries = entries;
-        }
-
-        public unsafe Palette(PaletteEntry* p, int count)
-        {
-            Entries = new PaletteEntry[count];
-            // todo: memcpy
-            fixed (PaletteEntry* pEntries = Entries)
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    pEntries[i] = *p;
-                    p += PaletteEntry.StructLength;
-                }
-            }
-        }
+        public IntPtr Pointer;
+        public int Length;
     }
 }

@@ -28,9 +28,9 @@ namespace ImageSharp.PNG
     public enum ColorType : byte
     {
         Grayscale = 0,
-        Color = 2,
+        TrueColor = 2,
         PaletteColor = 3,
         GrayscaleAlpha = 4,
-        ColorAlpha = 6
+        TrueColorAlpha = 6
     }
 }

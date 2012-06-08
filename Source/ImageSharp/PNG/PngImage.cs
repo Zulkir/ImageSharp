@@ -23,22 +23,25 @@ freely, subject to the following restrictions:
 */
 #endregion
 
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace ImageSharp.PNG
 {
     public class PngImage
     {
-        public uint Width { get; private set; }
-        public uint Height { get; private set; }
-        public BitDepth BitDepth { get; private set; }
-        public ColorType ColorType { get; private set; }
-        public CompressionMethod CompressionMethod { get; private set; }
-        public FilterMethod FilterMethod { get; private set; }
-        public InterlaceMethod InterlaceMethod { get; private set; }
-        public Palette Palette { get; private set; }
-
-        //readonly byte[] transparency;
+        public uint Width { get; set; }
+        public uint Height { get; set; }
+        public BitDepth BitDepth { get; set; }
+        public ColorType ColorType { get; set; }
+        public CompressionMethod CompressionMethod { get; set; }
+        public FilterMethod FilterMethod { get; set; }
+        public InterlaceMethod InterlaceMethod { get; set; }
+        public Palette Palette { get; set; }
+        //public List<byte[]> DataParts { get; set; }
+        public byte[] Transparency { get; set; }
 
         public unsafe PngImage(byte[] fileData, int byteOffset = 0)
         {
@@ -78,6 +81,9 @@ namespace ImageSharp.PNG
                 InterlaceMethod = pHeader->InterlaceMethod;
 
                 bool endFound = false;
+                List<PointerLengthPair> dataParts = null;
+                int totalDataLength = 0;
+                bool idatFinished = false;
 
                 while (!endFound)
                 {
@@ -90,6 +96,10 @@ namespace ImageSharp.PNG
 
                     int length = (int)pChunkBeginning->LengthFlipped.FlipEndianness();
 
+                    if (remaining < length + 4)
+                        throw new InvalidDataException("The file data ends abruptly");
+                    remaining -= length + 4;
+
                     byte* chunkData = p;
                     p += length;
 
@@ -98,6 +108,9 @@ namespace ImageSharp.PNG
 
                     // todo: check CRC
 
+                    if (dataParts != null && !idatFinished && pChunkBeginning->ChunkType.Value != Constants.IDAT)
+                        idatFinished = true;
+
                     switch (pChunkBeginning->ChunkType.Value)
                     {
                         case Constants.PLTE:
@@ -105,15 +118,44 @@ namespace ImageSharp.PNG
                             if (Palette != null)
                                 throw new InvalidDataException("PLTE chunk appears twice");
 
-                            if (remaining < length + 4)
-                                throw new InvalidDataException("The file data ends abruptly");
-                            remaining -= length + 4;
-
                             Palette = new Palette((PaletteEntry*)chunkData, length / 3);
                             break;
                         } 
+                        case Constants.tRNS:
+                        {
+                            if (dataParts != null)
+                                throw new InvalidDataException("tRNS chunk must precede IDAT change");
+
+                            switch (ColorType)
+                            {
+                                case ColorType.Grayscale:
+                                    if (length != 2)
+                                        throw new InvalidDataException("For color type Grayscale, tRNS length must be exactly 2 bytes");
+                                    break;
+                                case ColorType.TrueColor:
+                                    if (length != 6)
+                                        throw new InvalidDataException("For color type TrueColor, tRNS length must be exactly 6 bytes");
+                                    break;
+                                case ColorType.PaletteColor:
+                                    if (Palette == null)
+                                        throw new InvalidDataException("For color type PaletteColor, PLTE chunk must precede tRNS chunk");
+                                    if (length > Palette.Entries.Length)
+                                        throw new InvalidDataException("For color type PaletteColor, tRNS chunk length must be less than the number of palette entries");
+                                    break;
+                                default: throw new InvalidDataException(string.Format("tRNS chunk is not supported by the '{0}' color type", ColorType));
+                            }
+                            Transparency = new byte[length];
+                            Marshal.Copy((IntPtr)chunkData, Transparency, 0, length);
+                            break;
+                        }
                         case Constants.IDAT:
                         {
+                            if (idatFinished)
+                                throw new InvalidDataException("IDAT chunks must appear consecutively");
+
+                            dataParts = dataParts ?? new List<PointerLengthPair>();
+                            dataParts.Add(new PointerLengthPair{Pointer = (IntPtr)chunkData, Length = length});
+                            totalDataLength += length;
                             break;
                         } 
                         case Constants.IEND:

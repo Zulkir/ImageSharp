@@ -33,5 +33,6 @@ namespace ImageSharp.PNG
         public const uint PLTE = ((uint)'P' | (uint)'L' << 8 | (uint)'T' << 16 | (uint)'E' << 24);
         public const uint IDAT = ((uint)'I' | (uint)'D' << 8 | (uint)'A' << 16 | (uint)'T' << 24);
         public const uint IEND = ((uint)'I' | (uint)'E' << 8 | (uint)'N' << 16 | (uint)'D' << 24);
+        public const uint tRNS = ((uint)'t' | (uint)'R' << 8 | (uint)'N' << 16 | (uint)'S' << 24);
     }
 }
