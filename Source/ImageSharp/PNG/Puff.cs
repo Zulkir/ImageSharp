@@ -321,13 +321,7 @@ namespace ImageSharp.PNG
         }
 
         int virgin = 1;
-        short[] perserveData = new short[(MAXBITS + 1) + FIXLCODES + (MAXBITS + 1) + MAXDCODES];
-        //short[] lencnt = new short[MAXBITS + 1];
-        //short[] lensym = new short[FIXLCODES];
-        //short[] distcnt = new short[MAXBITS + 1];
-        //short[] distsym = new short[MAXDCODES];
-        //Huffman lencode = new Huffman{count = lencnt, symbol = lensym};
-        //Huffman distcode = new Huffman{count = distcnt, symbol = distsym};
+        readonly short[] perserveData = new short[(MAXBITS + 1) + FIXLCODES + (MAXBITS + 1) + MAXDCODES];
 
         int doFixed(State* s)
         {
