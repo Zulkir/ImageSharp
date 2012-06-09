@@ -27,7 +27,7 @@ namespace ImageSharp.BMP
 {
     static class Constants
     {
-        public const ushort BN = 'B' | ('M' << 8);
+        public const ushort BM = 'B' | ('M' << 8);
         public const ushort BA = 'B' | ('A' << 8);
         public const ushort CI = 'C' | ('I' << 8);
         public const ushort CP = 'C' | ('P' << 8);

@@ -23,10 +23,57 @@ freely, subject to the following restrictions:
 */
 #endregion
 
+using System.IO;
+
 namespace ImageSharp.BMP
 {
     public class BmpImage
     {
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public BPP BitsPerPixel { get; private set; }
+        public int RowPitch { get; private set; }
+        public byte[] Data { get; private set; }
 
+        public BmpImage(int width, int height, BPP bitsPerPixel)
+        {
+            Width = width;
+            Height = height;
+            BitsPerPixel = bitsPerPixel;
+            RowPitch = (width * (int)bitsPerPixel / 32) * 4;
+            Data = new byte[RowPitch * height * (int)bitsPerPixel];
+        }
+
+        public unsafe void SaveToStream(Stream stream)
+        {
+            byte[] headersData = new byte[54];
+            fixed (byte* pHeaders = headersData)
+            {
+                var pFileHeader = (BmpFileHeader*) pHeaders;
+                pFileHeader->HeaderField = Constants.BM;
+                pFileHeader->SizeInBytes = 54 + Data.Length;
+                pFileHeader->PixelArrayOffset = 54;
+
+                var pDipHeader = (DibHeader*) pHeaders + 40;
+                pDipHeader->Width = Width;
+                pDipHeader->Height = Height;
+                pDipHeader->NumPlanes = 1;
+                pDipHeader->BitsPerPixel = BitsPerPixel;
+                pDipHeader->Compression = Compression.Rgb;
+                pDipHeader->ImageSize = Data.Length;
+                pDipHeader->PixelsPerMeterHorizontal = 2835;
+                pDipHeader->PixelsPerMeterVertical = 2835;
+            }
+            stream.Write(headersData, 0, 54);
+            stream.Write(Data, 0, Data.Length);
+        }
+
+        public void SaveToFile(string fileName)
+        {
+            using (var stream = File.OpenWrite(fileName))
+            {
+                SaveToStream(stream);
+            }
+        }
     }
 }

@@ -38,7 +38,7 @@ namespace ImageSharp.BMP
         public Compression Compression;
         public int ImageSize;
         public int PixelsPerMeterHorizontal;
-        public int PixelsPerMEterVertical;
+        public int PixelsPerMeterVertical;
         public int NumPaletteColors;
         public int NumImportantPaletteColors;
 
