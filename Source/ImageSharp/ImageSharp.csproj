@@ -42,6 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BMP\BmpFileHeader.cs" />
+    <Compile Include="BMP\BmpImage.cs" />
+    <Compile Include="BMP\BPP.cs" />
+    <Compile Include="BMP\Compression.cs" />
+    <Compile Include="BMP\Constants.cs" />
+    <Compile Include="BMP\DibHeader.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="PNG\BitDepth.cs" />
     <Compile Include="PNG\ChunkBeginning.cs" />
