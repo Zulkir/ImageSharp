@@ -55,6 +55,7 @@
     <Compile Include="PNG\Palette.cs" />
     <Compile Include="PNG\PaletteEntry.cs" />
     <Compile Include="PNG\PngImage.cs" />
+    <Compile Include="PNG\Puff.cs" />
     <Compile Include="PointerLengthPair.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
