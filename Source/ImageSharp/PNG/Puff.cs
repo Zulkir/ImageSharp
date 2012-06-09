@@ -321,42 +321,58 @@ namespace ImageSharp.PNG
         }
 
         int virgin = 1;
-        short[] lencnt = new short[MAXBITS + 1];
-        short[] lensym = new short[FIXLCODES];
-        short[] distcnt = new short[MAXBITS + 1];
-        short[] distsym = new short[MAXDCODES];
-        Huffman lencode = new Huffman{count = lencnt, symbol = lensym};
-        Huffman distcode = new Huffman{count = distcnt, symbol = distsym};
+        short[] perserveData = new short[(MAXBITS + 1) + FIXLCODES + (MAXBITS + 1) + MAXDCODES];
+        //short[] lencnt = new short[MAXBITS + 1];
+        //short[] lensym = new short[FIXLCODES];
+        //short[] distcnt = new short[MAXBITS + 1];
+        //short[] distsym = new short[MAXDCODES];
+        //Huffman lencode = new Huffman{count = lencnt, symbol = lensym};
+        //Huffman distcode = new Huffman{count = distcnt, symbol = distsym};
 
         int doFixed(State* s)
         {
-            /* build fixed huffman tables if first call (may not be thread safe) */
-            if (virgin != 0) {
-                int symbol;
-                short* lengths = stackalloc short[FIXLCODES];
+            int result;
 
-                /* literal/length table */
-                for (symbol = 0; symbol < 144; symbol++)
-                    lengths[symbol] = 8;
-                for (; symbol < 256; symbol++)
-                    lengths[symbol] = 9;
-                for (; symbol < 280; symbol++)
-                    lengths[symbol] = 7;
-                for (; symbol < FIXLCODES; symbol++)
-                    lengths[symbol] = 8;
-                construct(&lencode, lengths, FIXLCODES);
+            fixed (short* p = perserveData)
+            {
+                short* lencnt = p;
+                short* lensym = lencnt + MAXBITS + 1;
+                short* distcnt = lensym + FIXLCODES;
+                short* distsym = distcnt + MAXBITS + 1;
+                Huffman lencode = new Huffman {count = lencnt, symbol = lensym};
+                Huffman distcode = new Huffman { count = distcnt, symbol = distsym };
 
-                /* distance table */
-                for (symbol = 0; symbol < MAXDCODES; symbol++)
-                    lengths[symbol] = 5;
-                construct(&distcode, lengths, MAXDCODES);
+                /* build fixed huffman tables if first call (may not be thread safe) */
+                if (virgin != 0)
+                {
+                    int symbol;
+                    short* lengths = stackalloc short[FIXLCODES];
 
-                /* do this just once */
-                virgin = 0;
+                    /* literal/length table */
+                    for (symbol = 0; symbol < 144; symbol++)
+                        lengths[symbol] = 8;
+                    for (; symbol < 256; symbol++)
+                        lengths[symbol] = 9;
+                    for (; symbol < 280; symbol++)
+                        lengths[symbol] = 7;
+                    for (; symbol < FIXLCODES; symbol++)
+                        lengths[symbol] = 8;
+                    construct(&lencode, lengths, FIXLCODES);
+
+                    /* distance table */
+                    for (symbol = 0; symbol < MAXDCODES; symbol++)
+                        lengths[symbol] = 5;
+                    construct(&distcode, lengths, MAXDCODES);
+
+                    /* do this just once */
+                    virgin = 0;
+                }
+
+                /* decode data until end-of-block code */
+                result = codes(s, &lencode, &distcode);
             }
 
-            /* decode data until end-of-block code */
-            return codes(s, &lencode, &distcode);
+            return result;
         }
 
         static readonly short[] order = /* permutation of code length codes */
