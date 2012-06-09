@@ -30,6 +30,7 @@ freely, subject to the following restrictions:
  */
 
 using System;
+using System.IO;
 
 namespace ImageSharp.PNG
 {
@@ -128,7 +129,7 @@ namespace ImageSharp.PNG
             /* load at least need bits into val */
             val = s->bitbuf;
             while (s->bitcnt < need) {
-                if (s->incnt == s->inlen) longjmp(s->env, 1);   /* out of input */
+                if (s->incnt == s->inlen) throw new InvalidDataException("Output of input"); //longjmp(s->env, 1);   /* out of input */
                 val |= (long)(s->inBuffer[s->incnt++]) << s->bitcnt;  /* load eight bits */
                 s->bitcnt += 8;
             }
@@ -208,8 +209,8 @@ namespace ImageSharp.PNG
                 }
                 left = (MAXBITS+1) - len;
                 if (left == 0) break;
-                //if (s->incnt == s->inlen) longjmp(s->env, 1);   /* out of input */
-                if (s->incnt == s->inlen) throw new Exception("Out of length");
+                if (s->incnt == s->inlen) throw new InvalidDataException("Output of input"); //longjmp(s->env, 1);   /* out of input */
+                //if (s->incnt == s->inlen) throw new Exception("Out of length");
                 bitbuf = s->inBuffer[s->incnt++];
                 if (left > 8) left = 8;
             }
@@ -458,10 +459,8 @@ namespace ImageSharp.PNG
             s.bitbuf = 0;
             s.bitcnt = 0;
 
-            /* return if bits() or decode() tries to read past available input */
-            if (setjmp(s.env) != 0)             /* if came back here via longjmp() */
-                err = 2;                        /* then skip do-loop, return error */
-            else {
+            try
+            {
                 /* process blocks until last block or error */
                 do {
                     last = bits(&s, 1);         /* one if last block */
@@ -473,9 +472,14 @@ namespace ImageSharp.PNG
                     if (err != 0) break;        /* return with error */
                 } while (last == 0);
             }
+            catch (InvalidDataException)
+            {
+                err = 2;
+            }
 
             /* update the lengths and return */
-            if (err <= 0) {
+            if (err <= 0)
+            {
                 *destlen = s.outcnt;
                 *sourcelen = (int)s.incnt;
             }
