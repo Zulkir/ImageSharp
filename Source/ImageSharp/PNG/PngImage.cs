@@ -194,7 +194,7 @@ namespace ImageSharp.PNG
                     }
                     else
                     {
-                        var compressedData = new byte[totalCompressedDataLength - 6];
+                        var compressedData = new byte[totalCompressedDataLength];
                         int offset = 0;
                         foreach (var part in compressedDataParts)
                         {
@@ -204,7 +204,7 @@ namespace ImageSharp.PNG
 
                         fixed (byte* pCompressedData = compressedData)
                         {
-                            var puffResult = puff.DoPuff(pData, &destLen, pCompressedData, &sourceLen);
+                            var puffResult = puff.DoPuff(pData, &destLen, pCompressedData + 2, &sourceLen);
                             if (puffResult != 0)
                                 throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));
                         }

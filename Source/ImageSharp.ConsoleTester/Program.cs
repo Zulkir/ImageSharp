@@ -24,6 +24,8 @@ freely, subject to the following restrictions:
 #endregion
 
 using System;
+using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Text;
 using ImageSharp.BMP;
@@ -56,14 +58,47 @@ namespace ImageSharp.ConsoleTester
             Run();
         }
 
+        static volatile int x;
+
         static void Run()
         {
+            var sw = new Stopwatch();
             byte[] data = File.ReadAllBytes("../Textures/Img.png");
+            PngImage img = new PngImage(File.ReadAllBytes("../Textures/Img.png"));
+            img = new PngImage(File.ReadAllBytes("../Textures/Kyuubey.png"));
+            var bmp = new Bitmap("../Textures/Img.png");
+            bmp = new Bitmap("../Textures/Kyuubey.png");
+
+            sw.Start();
+            for (int i = 0; i < 1; i++)
+            {
+                using (var bitmap = new Bitmap("../Textures/Img.png"))
+                {
+                    x = bitmap.Width;
+                }
+            }
+            sw.Stop();
+            double gdiTime = sw.Elapsed.TotalSeconds;
+            Console.WriteLine(gdiTime);
+
+            sw.Reset();
+            sw.Start();
+            for (int i = 0; i < 1; i++)
+            {
+                PngImage pngImage = new PngImage(File.ReadAllBytes("../Textures/Img.png"));
+                x = pngImage.Width;
+            }
+            sw.Stop();
+            double isTime = sw.Elapsed.TotalSeconds;
+            Console.WriteLine(isTime);
+            Console.WriteLine(gdiTime/isTime);
+            Console.WriteLine(x);
+            /*
             PngImage pngImage = new PngImage(data);
             BmpImage bmpImage = new BmpImage(pngImage.Width, pngImage.Height, BPP.ThirtyTwo);
             Array.Copy(pngImage.Data, bmpImage.Data, bmpImage.Data.Length);
             bmpImage.SaveToFile("output.bmp");
-            Console.WriteLine(pngImage.ToString());
+            Console.WriteLine(pngImage.ToString());*/
         }
     }
 }

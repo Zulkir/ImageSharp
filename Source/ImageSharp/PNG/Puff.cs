@@ -24,12 +24,13 @@ freely, subject to the following restrictions:
 #endregion
 
 /*
- This code is mostly a rewritten code from 
+ This code is a ported to C# and slightly modified (to support source data split into chunks) code from 
  http://svn.ghostscript.com/ghostscript/tags/zlib-1.2.3/contrib/puff/puff.c
  by Mark Adler that is subject to a similar ZLib license.
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace ImageSharp.PNG
@@ -487,6 +488,60 @@ namespace ImageSharp.PNG
                 err = 2;
             }
 
+            /* update the lengths and return */
+            if (err <= 0)
+            {
+                *destlen = s.outcnt;
+                *sourcelen = s.incnt;
+            }
+            return err;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dest">Pointer to destination pointer</param>
+        /// <param name="destlen">Amount of output space</param>
+        /// <param name="source">Pointer to source data pointer</param>
+        /// <param name="sourcelen">Amount of input available</param>
+        /// <returns></returns>
+        public int DoPuff(byte* dest, uint* destlen, List<PointerLengthPair> sourcePairs, uint* sourcelen)
+        {
+            State s;             /* input/output state */
+            int last, type;             /* block information */
+            int err;                    /* return value */
+
+            /* initialize output state */
+            s.outBuffer = dest;
+            s.outlen = *destlen;                /* ignored if dest is NIL */
+            s.outcnt = 0;
+
+            /* initialize input state */
+            s.inBuffer = source;
+            s.inlen = *sourcelen;
+            s.incnt = 0;
+            s.bitbuf = 0;
+            s.bitcnt = 0;
+
+            try
+            {
+                /* process blocks until last block or error */
+                do
+                {
+                    last = bits(&s, 1);         /* one if last block */
+                    type = bits(&s, 2);         /* block type 0..3 */
+                    err = type == 0 ? stored(&s) :
+                          (type == 1 ? doFixed(&s) :
+                           (type == 2 ? doDynamic(&s) :
+                            -1));               /* type == 3, invalid */
+                    if (err != 0) break;        /* return with error */
+                } while (last == 0);
+            }
+            catch (InvalidDataException)
+            {
+                err = 2;
+            }
+            
             /* update the lengths and return */
             if (err <= 0)
             {
