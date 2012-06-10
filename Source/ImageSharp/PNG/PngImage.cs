@@ -40,14 +40,14 @@ namespace ImageSharp.PNG
         public FilterMethod FilterMethod { get; set; }
         public InterlaceMethod InterlaceMethod { get; set; }
         public Palette Palette { get; set; }
-        //public List<byte[]> DataParts { get; set; }
         public byte[] Transparency { get; set; }
+        public byte[] Data { get; set; }
 
         public unsafe PngImage(byte[] fileData, int byteOffset = 0)
         {
-            fixed (byte* data = fileData)
+            fixed (byte* pFileData = fileData)
             {
-                byte* p = data;
+                byte* p = pFileData;
                 int remaining = fileData.Length - byteOffset;
 
                 // Signature
@@ -168,6 +168,10 @@ namespace ImageSharp.PNG
                         }
                     }
                 }
+
+                Data = new byte[Width * Height * ColorType * BitDepth];
+
+                var puff = new Puff();
             }
         }
     }

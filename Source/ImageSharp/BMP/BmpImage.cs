@@ -50,7 +50,7 @@ namespace ImageSharp.BMP
             fixed (byte* pHeaders = headersData)
             {
                 var pFileHeader = (BmpFileHeader*) pHeaders;
-                pFileHeader->HeaderField = Constants.BM;
+                pFileHeader->HeaderField = Helper.BM;
                 pFileHeader->SizeInBytes = 54 + Data.Length;
                 pFileHeader->PixelArrayOffset = 54;
 

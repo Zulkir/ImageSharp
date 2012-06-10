@@ -56,6 +56,7 @@
     <Compile Include="PNG\CompressionMethod.cs" />
     <Compile Include="PNG\Constants.cs" />
     <Compile Include="PNG\FilterMethod.cs" />
+    <Compile Include="PNG\FilterType.cs" />
     <Compile Include="PNG\Header.cs" />
     <Compile Include="PNG\InterlaceMethod.cs" />
     <Compile Include="PNG\Palette.cs" />

@@ -23,16 +23,15 @@ freely, subject to the following restrictions:
 */
 #endregion
 
-namespace ImageSharp.PNG
+namespace ImageSharp.BMP
 {
-    public static class Constants
+    static class Helper
     {
-        public const ulong PngSignature = (137ul  | 80ul << 8 | 78ul << 16 | 71ul << 24 | 13ul << 32 | 10ul << 40 | 26ul << 48 | 10ul << 56);
-        public const uint ChunkOverheadLength = 12;
-        public const uint IHDR = ((uint)'I' | (uint)'H' << 8 | (uint)'D' << 16 | (uint)'R' << 24);
-        public const uint PLTE = ((uint)'P' | (uint)'L' << 8 | (uint)'T' << 16 | (uint)'E' << 24);
-        public const uint IDAT = ((uint)'I' | (uint)'D' << 8 | (uint)'A' << 16 | (uint)'T' << 24);
-        public const uint IEND = ((uint)'I' | (uint)'E' << 8 | (uint)'N' << 16 | (uint)'D' << 24);
-        public const uint tRNS = ((uint)'t' | (uint)'R' << 8 | (uint)'N' << 16 | (uint)'S' << 24);
+        public const ushort BM = 'B' | ('M' << 8);
+        public const ushort BA = 'B' | ('A' << 8);
+        public const ushort CI = 'C' | ('I' << 8);
+        public const ushort CP = 'C' | ('P' << 8);
+        public const ushort IC = 'I' | ('C' << 8);
+        public const ushort PT = 'P' | ('T' << 8);
     }
 }
