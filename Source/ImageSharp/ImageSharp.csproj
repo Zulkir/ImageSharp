@@ -35,18 +35,13 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BMP\BmpFileHeader.cs" />
     <Compile Include="BMP\BmpImage.cs" />
     <Compile Include="BMP\BPP.cs" />
     <Compile Include="BMP\Compression.cs" />
-    <Compile Include="BMP\Constants.cs" />
+    <Compile Include="BMP\Helper.cs" />
     <Compile Include="BMP\DibHeader.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="PNG\BitDepth.cs" />
@@ -54,7 +49,7 @@
     <Compile Include="PNG\ChunkType.cs" />
     <Compile Include="PNG\ColorType.cs" />
     <Compile Include="PNG\CompressionMethod.cs" />
-    <Compile Include="PNG\Constants.cs" />
+    <Compile Include="PNG\Helper.cs" />
     <Compile Include="PNG\FilterMethod.cs" />
     <Compile Include="PNG\FilterType.cs" />
     <Compile Include="PNG\Header.cs" />
@@ -63,6 +58,7 @@
     <Compile Include="PNG\PaletteEntry.cs" />
     <Compile Include="PNG\PngImage.cs" />
     <Compile Include="PNG\Puff.cs" />
+    <Compile Include="PNG\ZlibBeginning.cs" />
     <Compile Include="PointerLengthPair.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

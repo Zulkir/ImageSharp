@@ -25,16 +25,44 @@ freely, subject to the following restrictions:
 
 using System;
 using System.IO;
+using System.Text;
+using ImageSharp.BMP;
 using ImageSharp.PNG;
 
 namespace ImageSharp.ConsoleTester
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var builder = new StringBuilder();
+                var ex = (Exception)args.ExceptionObject;
+                while (ex != null)
+                {
+                    builder.AppendLine(ex.Message);
+                    builder.AppendLine();
+                    ex = ex.InnerException;
+                }
+                builder.AppendLine(((Exception)args.ExceptionObject).StackTrace);
+
+                using (var writer = new StreamWriter("errorlog.txt"))
+                {
+                    writer.WriteLine(builder.ToString());
+                }
+            };
+
+            Run();
+        }
+
+        static void Run()
         {
             byte[] data = File.ReadAllBytes("../Textures/Img.png");
             PngImage pngImage = new PngImage(data);
+            BmpImage bmpImage = new BmpImage(pngImage.Width, pngImage.Height, BPP.ThirtyTwo);
+            Array.Copy(pngImage.Data, bmpImage.Data, bmpImage.Data.Length);
+            bmpImage.SaveToFile("output.bmp");
             Console.WriteLine(pngImage.ToString());
         }
     }

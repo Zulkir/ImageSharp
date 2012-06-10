@@ -32,8 +32,8 @@ namespace ImageSharp.PNG
 {
     public class PngImage
     {
-        public uint Width { get; set; }
-        public uint Height { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
         public BitDepth BitDepth { get; set; }
         public ColorType ColorType { get; set; }
         public CompressionMethod CompressionMethod { get; set; }
@@ -55,7 +55,7 @@ namespace ImageSharp.PNG
                     throw new InvalidDataException("The file data ends abruptly");
                 remaining -= 8;
 
-                if (*(ulong*)p != Constants.PngSignature)
+                if (*(ulong*)p != Helper.PngSignature)
                     throw new InvalidDataException("PNG signature is missing or incorect");
                 p += 8;
                 
@@ -67,13 +67,13 @@ namespace ImageSharp.PNG
                 var pHeader = (Header*) p;
                 p += Header.StructLength;
 
-                if (pHeader->ChunkType.Value != Constants.IHDR)
+                if (pHeader->ChunkType.Value != Helper.IHDR)
                     throw new InvalidDataException(string.Format("IHDR chunk expected, but {0} found.", pHeader->ChunkType.ToString()));
                 if (pHeader->LengthFlipped.FlipEndianness() != Header.DataLength)
                     throw new InvalidDataException("IHDR length must be exactly 13 bytes");
 
-                Width = pHeader->WidthFlipped.FlipEndianness();
-                Height = pHeader->HeightFlipped.FlipEndianness();
+                Width = (int)pHeader->WidthFlipped.FlipEndianness();
+                Height = (int)pHeader->HeightFlipped.FlipEndianness();
                 BitDepth = pHeader->BitDepth;
                 ColorType = pHeader->ColorType;
                 CompressionMethod = pHeader->CompressionMethod;
@@ -81,8 +81,8 @@ namespace ImageSharp.PNG
                 InterlaceMethod = pHeader->InterlaceMethod;
 
                 bool endFound = false;
-                List<PointerLengthPair> dataParts = null;
-                int totalDataLength = 0;
+                List<PointerLengthPair> compressedDataParts = null;
+                int totalCompressedDataLength = 0;
                 bool idatFinished = false;
 
                 while (!endFound)
@@ -108,12 +108,12 @@ namespace ImageSharp.PNG
 
                     // todo: check CRC
 
-                    if (dataParts != null && !idatFinished && pChunkBeginning->ChunkType.Value != Constants.IDAT)
+                    if (compressedDataParts != null && !idatFinished && pChunkBeginning->ChunkType.Value != Helper.IDAT)
                         idatFinished = true;
 
                     switch (pChunkBeginning->ChunkType.Value)
                     {
-                        case Constants.PLTE:
+                        case Helper.PLTE:
                         {
                             if (Palette != null)
                                 throw new InvalidDataException("PLTE chunk appears twice");
@@ -121,9 +121,9 @@ namespace ImageSharp.PNG
                             Palette = new Palette((PaletteEntry*)chunkData, length / 3);
                             break;
                         } 
-                        case Constants.tRNS:
+                        case Helper.tRNS:
                         {
-                            if (dataParts != null)
+                            if (compressedDataParts != null)
                                 throw new InvalidDataException("tRNS chunk must precede IDAT change");
 
                             switch (ColorType)
@@ -148,17 +148,17 @@ namespace ImageSharp.PNG
                             Marshal.Copy((IntPtr)chunkData, Transparency, 0, length);
                             break;
                         }
-                        case Constants.IDAT:
+                        case Helper.IDAT:
                         {
                             if (idatFinished)
                                 throw new InvalidDataException("IDAT chunks must appear consecutively");
 
-                            dataParts = dataParts ?? new List<PointerLengthPair>();
-                            dataParts.Add(new PointerLengthPair{Pointer = (IntPtr)chunkData, Length = length});
-                            totalDataLength += length;
+                            compressedDataParts = compressedDataParts ?? new List<PointerLengthPair>();
+                            compressedDataParts.Add(new PointerLengthPair{Pointer = (IntPtr)chunkData, Length = length});
+                            totalCompressedDataLength += length;
                             break;
                         } 
-                        case Constants.IEND:
+                        case Helper.IEND:
                         {
                             if (length != 0)
                                 throw new InvalidDataException("IEND chunk must be empty");
@@ -169,10 +169,150 @@ namespace ImageSharp.PNG
                     }
                 }
 
-                Data = new byte[Width * Height * ColorType * BitDepth];
+                if (compressedDataParts == null)
+                    throw new InvalidDataException("No mandatory IDAT chunks found");
 
                 var puff = new Puff();
+                Data = new byte[Helper.SizeOfFilteredImageData(Width, Height, ColorType, BitDepth)];
+                
+                fixed (byte* pData = Data)
+                {
+                    uint destLen = (uint)Data.Length;
+                    uint sourceLen = (uint) totalCompressedDataLength - 6;
+
+                    if (compressedDataParts.Count == 1)
+                    {
+                        /*
+                        var zlibBeginning = (ZlibBeginning*)compressedDataParts[0].Pointer;
+                        if (zlibBeginning->CompressionFlags != 8)
+                            throw new InvalidDataException("ZLib compression flags must be 8");*/
+
+                        byte* source = (byte*)compressedDataParts[0].Pointer + 2;
+                        var puffResult = puff.DoPuff(pData, &destLen, source, &sourceLen);
+                        if (puffResult != 0)
+                            throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));
+                    }
+                    else
+                    {
+                        var compressedData = new byte[totalCompressedDataLength - 6];
+                        int offset = 0;
+                        foreach (var part in compressedDataParts)
+                        {
+                            Marshal.Copy(part.Pointer, compressedData, offset, part.Length);
+                            offset += part.Length;
+                        }
+
+                        fixed (byte* pCompressedData = compressedData)
+                        {
+                            var puffResult = puff.DoPuff(pData, &destLen, pCompressedData, &sourceLen);
+                            if (puffResult != 0)
+                                throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));
+                        }
+                    }
+
+                    if (destLen != Data.Length)
+                        throw new InvalidDataException(string.Format("Expected decompressed data size was {0}, but {1} were recieved", Data.Length, destLen));
+                    if (sourceLen != totalCompressedDataLength - 6)
+                        throw new InvalidDataException(string.Format("Expected compressed data size was {0}, but was actually {1}", totalCompressedDataLength, sourceLen));
+                }
             }
+
+            fixed (byte* pData = Data)
+            {
+                int numPasses = InterlaceMethod == InterlaceMethod.Adam7 ? 7 : 1;
+
+                for (int pass = 0; pass < numPasses; pass++)
+                {
+                    int passWidthInBytes = Helper.SizeOfImageRow(
+                        InterlaceMethod == InterlaceMethod.Adam7 ? Helper.InterlacedPassWidth(pass, Width) : Width, 
+                        ColorType, BitDepth);
+
+                    if (passWidthInBytes != 0)
+                    {
+                        byte* rawRow = pData;
+                        byte* filteredRow = pData;
+                        int bpp = Helper.BytesPerPixelCeil(ColorType, BitDepth);
+
+                        // First row
+                        var filterType = (FilterType)filteredRow[0]; filteredRow++;
+                        switch (filterType)
+                        {
+                            case FilterType.None:
+                                for (int x = 0; x < passWidthInBytes; x++)
+                                    rawRow[x] = filteredRow[x];
+                                break;
+                            case FilterType.Sub:
+                                for (int x = 0; x < bpp; x++)
+                                    rawRow[x] = filteredRow[x];
+                                for (int x = bpp; x < passWidthInBytes; x++)
+                                    rawRow[x] = (byte)(filteredRow[x] + rawRow[x - bpp]);
+                                break;
+                            case FilterType.Up:
+                                for (int x = 0; x < passWidthInBytes; x++)
+                                    rawRow[x] = filteredRow[x];
+                                break;
+                            case FilterType.Average:
+                                for (int x = 0; x < bpp; x++)
+                                    rawRow[x] = filteredRow[x];
+                                for (int x = bpp; x < passWidthInBytes; x++)
+                                    rawRow[x] = (byte)(filteredRow[x] + rawRow[x - bpp] / 2);
+                                break;
+                            case FilterType.Parth:
+                                for (int x = 0; x < bpp; x++)
+                                    rawRow[x] = filteredRow[x];
+                                for (int x = bpp; x < passWidthInBytes; x++)
+                                    rawRow[x] = (byte)(filteredRow[x] + Helper.PaethPredictor(rawRow[x - bpp], 0, 0));
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException("filterType");
+                        }
+
+                        // Other rows
+
+                        for (int y = 1; y < Height; y++)
+                        {
+                            byte* prevRawRow = rawRow;
+                            rawRow += passWidthInBytes;
+                            filteredRow += passWidthInBytes;
+
+                            filterType = (FilterType)filteredRow[0]; filteredRow++;
+                            switch (filterType)
+                            {
+                                case FilterType.None:
+                                    for (int x = 0; x < passWidthInBytes; x++)
+                                        rawRow[x] = filteredRow[x];
+                                    break;
+                                case FilterType.Sub:
+                                    for (int x = 0; x < bpp; x++)
+                                        rawRow[x] = filteredRow[x];
+                                    for (int x = bpp; x < passWidthInBytes; x++)
+                                        rawRow[x] = (byte)(filteredRow[x] + rawRow[x - bpp]);
+                                    break;
+                                case FilterType.Up:
+                                    for (int x = 0; x < passWidthInBytes; x++)
+                                        rawRow[x] = (byte)(filteredRow[x] + prevRawRow[x]);
+                                    break;
+                                case FilterType.Average:
+                                    for (int x = 0; x < bpp; x++)
+                                        rawRow[x] = (byte)(filteredRow[x] + prevRawRow[x] / 2);
+                                    for (int x = bpp; x < passWidthInBytes; x++)
+                                        rawRow[x] = (byte)(filteredRow[x] + (rawRow[x - bpp] + prevRawRow[x]) / 2);
+                                    break;
+                                case FilterType.Parth:
+                                    for (int x = 0; x < bpp; x++)
+                                        rawRow[x] = (byte)(filteredRow[x] + Helper.PaethPredictor(0, prevRawRow[0], 0));
+                                    for (int x = bpp; x < passWidthInBytes; x++)
+                                        rawRow[x] = (byte)(filteredRow[x] + Helper.PaethPredictor(rawRow[x - bpp], prevRawRow[x], prevRawRow[x - bpp]));
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException("filterType");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Done
         }
     }
 }

@@ -23,10 +23,77 @@ freely, subject to the following restrictions:
 */
 #endregion
 
+using System;
+
 namespace ImageSharp.PNG
 {
     public static class Helper
     {
+        public static int BytesPerPixelCeil(ColorType colorType, BitDepth bitDepth)
+        {
+            int bitsPerPixel;
+            switch (colorType)
+            {
+                case ColorType.Grayscale: bitsPerPixel = (int)bitDepth; break;
+                case ColorType.TrueColor: bitsPerPixel = 3 * (int)bitDepth; break;
+                case ColorType.PaletteColor: bitsPerPixel = (int)bitDepth; break;
+                case ColorType.GrayscaleAlpha: bitsPerPixel = 2 * (int)bitDepth; break;
+                case ColorType.TrueColorAlpha: bitsPerPixel = 4 * (int)bitDepth; break;
+                default: throw new ArgumentOutOfRangeException("colorType");
+            }
+            return bitsPerPixel % 8 == 0 ? bitsPerPixel / 8 : bitsPerPixel / 8 + 1;
+        }
+
+        public static int SizeOfImageRow(int width, ColorType colorType, BitDepth bitDepth)
+        {
+            switch (colorType)
+            {
+                case ColorType.Grayscale: return (width * (int)bitDepth) / 8;
+                case ColorType.TrueColor: return (width * 3 * (int)bitDepth) / 8;
+                case ColorType.PaletteColor: return (width * (int)bitDepth) / 8;
+                case ColorType.GrayscaleAlpha: return (width * 2 * (int)bitDepth) / 8;
+                case ColorType.TrueColorAlpha: return (width * 4 * (int)bitDepth) / 8;
+                default: throw new ArgumentOutOfRangeException("colorType");
+            }
+        }
+
+        public static int SizeOfImageData(int width, int height, ColorType colorType, BitDepth bitDepth)
+        {
+            return SizeOfImageRow(width, colorType, bitDepth) * height;
+        }
+
+        public static int SizeOfFilteredImageData(int width, int height, ColorType colorType, BitDepth bitDepth)
+        {
+            return SizeOfImageData(width, height, colorType, bitDepth) + height;
+        }
+
+        public static int InterlacedPassWidth(int pass, int baseWidth)
+        {
+            switch (pass)
+            {
+                case 1: return (baseWidth % 8) == 0 ? baseWidth / 8 : baseWidth / 8 + 1;
+                case 2: return (baseWidth % 8) == 0 ? baseWidth / 8 : baseWidth / 8 + 1;
+                case 3: return (baseWidth % 4) == 0 ? baseWidth / 4 : baseWidth / 4 + 1;
+                case 4: return (baseWidth % 4) != 3 ? baseWidth / 4 : baseWidth / 4 + 1;
+                case 5: return (baseWidth % 2) == 0 ? baseWidth / 2 : baseWidth / 2 + 1;
+                case 6: return baseWidth / 2;
+                case 7: return baseWidth;
+                default: throw new ArgumentOutOfRangeException("pass");
+            }
+        }
+
+        public static int PaethPredictor(int a, int b, int c)
+        {
+            int p = a + b - c;
+            int pa = Math.Abs(p - a);
+            int pb = Math.Abs(p - b);
+            int pc = Math.Abs(p - c);
+
+            return pa <= pb && pa <= pc
+                       ? a
+                       : pb <= pc ? b : c;
+        }
+
         public const ulong PngSignature = (137ul  | 80ul << 8 | 78ul << 16 | 71ul << 24 | 13ul << 32 | 10ul << 40 | 26ul << 48 | 10ul << 56);
         public const uint ChunkOverheadLength = 12;
         public const uint IHDR = ((uint)'I' | (uint)'H' << 8 | (uint)'D' << 16 | (uint)'R' << 24);

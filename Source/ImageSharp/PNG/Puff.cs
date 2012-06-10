@@ -451,7 +451,7 @@ namespace ImageSharp.PNG
         /// <param name="source">Pointer to source data pointer</param>
         /// <param name="sourcelen">Amount of input available</param>
         /// <returns></returns>
-        public int DoPuff(byte* dest, uint* destlen, byte* source, int* sourcelen)
+        public int DoPuff(byte* dest, uint* destlen, byte* source, uint* sourcelen)
         {
             State s;             /* input/output state */
             int last, type;             /* block information */
@@ -491,7 +491,7 @@ namespace ImageSharp.PNG
             if (err <= 0)
             {
                 *destlen = s.outcnt;
-                *sourcelen = (int)s.incnt;
+                *sourcelen = s.incnt;
             }
             return err;
         }

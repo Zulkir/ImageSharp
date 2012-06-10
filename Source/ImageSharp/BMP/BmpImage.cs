@@ -41,7 +41,7 @@ namespace ImageSharp.BMP
             Height = height;
             BitsPerPixel = bitsPerPixel;
             RowPitch = (width * (int)bitsPerPixel / 32) * 4;
-            Data = new byte[RowPitch * height * (int)bitsPerPixel];
+            Data = new byte[RowPitch * height];
         }
 
         public unsafe void SaveToStream(Stream stream)
@@ -54,9 +54,10 @@ namespace ImageSharp.BMP
                 pFileHeader->SizeInBytes = 54 + Data.Length;
                 pFileHeader->PixelArrayOffset = 54;
 
-                var pDipHeader = (DibHeader*) pHeaders + 40;
+                var pDipHeader = (DibHeader*) (pHeaders + 14);
+                pDipHeader->StructureSize = 40;
                 pDipHeader->Width = Width;
-                pDipHeader->Height = Height;
+                pDipHeader->Height = -Height;
                 pDipHeader->NumPlanes = 1;
                 pDipHeader->BitsPerPixel = BitsPerPixel;
                 pDipHeader->Compression = Compression.Rgb;
