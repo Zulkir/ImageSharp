@@ -180,20 +180,25 @@ namespace ImageSharp.PNG
                     uint destLen = (uint)Data.Length;
                     uint sourceLen = (uint) totalCompressedDataLength - 6;
 
+                    var puffResult = puff.DoPuff(pData, &destLen, compressedDataParts, &sourceLen);
+                    if (puffResult != 0)
+                        throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));
+
                     if (compressedDataParts.Count == 1)
                     {
                         /*
                         var zlibBeginning = (ZlibBeginning*)compressedDataParts[0].Pointer;
                         if (zlibBeginning->CompressionFlags != 8)
                             throw new InvalidDataException("ZLib compression flags must be 8");*/
-
+                        /*
                         byte* source = (byte*)compressedDataParts[0].Pointer + 2;
                         var puffResult = puff.DoPuff(pData, &destLen, source, &sourceLen);
                         if (puffResult != 0)
-                            throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));
+                            throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));*/
                     }
                     else
                     {
+                        /*
                         var compressedData = new byte[totalCompressedDataLength];
                         int offset = 0;
                         foreach (var part in compressedDataParts)
@@ -207,7 +212,7 @@ namespace ImageSharp.PNG
                             var puffResult = puff.DoPuff(pData, &destLen, pCompressedData + 2, &sourceLen);
                             if (puffResult != 0)
                                 throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));
-                        }
+                        }*/
                     }
 
                     if (destLen != Data.Length)
