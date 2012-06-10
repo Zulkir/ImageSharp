@@ -177,6 +177,8 @@ namespace ImageSharp.PNG
                 
                 fixed (byte* pData = Data)
                 {
+                    // todo: check ZLib header
+
                     uint destLen = (uint)Data.Length;
                     uint sourceLen = (uint) totalCompressedDataLength - 6;
 
@@ -184,41 +186,12 @@ namespace ImageSharp.PNG
                     if (puffResult != 0)
                         throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));
 
-                    if (compressedDataParts.Count == 1)
-                    {
-                        /*
-                        var zlibBeginning = (ZlibBeginning*)compressedDataParts[0].Pointer;
-                        if (zlibBeginning->CompressionFlags != 8)
-                            throw new InvalidDataException("ZLib compression flags must be 8");*/
-                        /*
-                        byte* source = (byte*)compressedDataParts[0].Pointer + 2;
-                        var puffResult = puff.DoPuff(pData, &destLen, source, &sourceLen);
-                        if (puffResult != 0)
-                            throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));*/
-                    }
-                    else
-                    {
-                        /*
-                        var compressedData = new byte[totalCompressedDataLength];
-                        int offset = 0;
-                        foreach (var part in compressedDataParts)
-                        {
-                            Marshal.Copy(part.Pointer, compressedData, offset, part.Length);
-                            offset += part.Length;
-                        }
-
-                        fixed (byte* pCompressedData = compressedData)
-                        {
-                            var puffResult = puff.DoPuff(pData, &destLen, pCompressedData + 2, &sourceLen);
-                            if (puffResult != 0)
-                                throw new InvalidDataException(string.Format("Decompressing the image data failed with the code {0}", puffResult));
-                        }*/
-                    }
-
                     if (destLen != Data.Length)
                         throw new InvalidDataException(string.Format("Expected decompressed data size was {0}, but {1} were recieved", Data.Length, destLen));
                     if (sourceLen != totalCompressedDataLength - 6)
                         throw new InvalidDataException(string.Format("Expected compressed data size was {0}, but was actually {1}", totalCompressedDataLength, sourceLen));
+
+                    // todo: check ZLib crc
                 }
             }
 

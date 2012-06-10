@@ -66,24 +66,24 @@ namespace ImageSharp.ConsoleTester
             byte[] data = File.ReadAllBytes("../Textures/Img.png");
             PngImage img = new PngImage(File.ReadAllBytes("../Textures/Img.png"));
             img = new PngImage(File.ReadAllBytes("../Textures/Kyuubey.png"));
-            var bmp = new Bitmap("../Textures/Img.png");
-            bmp = new Bitmap("../Textures/Kyuubey.png");
-            /*
+            var bmp = new Bitmap("../Textures/Img.png"); bmp.Dispose();
+            bmp = new Bitmap("../Textures/Kyuubey.png"); bmp.Dispose();
+            
             sw.Start();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 using (var bitmap = new Bitmap("../Textures/Img.png"))
                 {
                     x = bitmap.Width;
                 }
             }
-            sw.Stop();*/
+            sw.Stop();
             double gdiTime = sw.Elapsed.TotalSeconds;
             Console.WriteLine(gdiTime);
 
             sw.Reset();
             sw.Start();
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 PngImage pngImage = new PngImage(File.ReadAllBytes("../Textures/Img.png"));
                 x = pngImage.Width;

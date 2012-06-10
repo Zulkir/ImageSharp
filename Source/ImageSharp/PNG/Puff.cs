@@ -74,14 +74,14 @@ namespace ImageSharp.PNG
 
 
 
-        List<PointerLengthPair> sourcePairs;
+        List<PointerLengthPair> pairs;
         int currentPairIndex;
         int incntToJump;
 
         void JumpToNextSourceChunk()
         {
             currentPairIndex++; 
-            var pair = sourcePairs[currentPairIndex]; 
+            var pair = pairs[currentPairIndex]; 
             incntToJump += pair.Length; 
             inBuffer = (byte*)pair.Pointer - incnt;
         }
@@ -526,7 +526,7 @@ namespace ImageSharp.PNG
         /// </summary>
         /// <param name="dest">Pointer to destination pointer</param>
         /// <param name="destlen">Amount of output space</param>
-        /// <param name="source">Pointer to source data pointer</param>
+        /// <param name="sourcePairs"> </param>
         /// <param name="sourcelen">Amount of input available</param>
         /// <returns></returns>
         public int DoPuff(byte* dest, uint* destlen, List<PointerLengthPair> sourcePairs, uint* sourcelen)
@@ -547,7 +547,7 @@ namespace ImageSharp.PNG
             bitbuf = 0;
             bitcnt = 0;
 
-            this.sourcePairs = sourcePairs;
+            pairs = sourcePairs;
             incntToJump = sourcePairs[0].Length - 2;
 
             try
