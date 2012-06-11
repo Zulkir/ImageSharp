@@ -68,60 +68,134 @@ namespace ImageSharp.PNG
                         switch (BitDepth)
                         {
                             case BitDepth.One:
-                                
-                                for (int i = 0; i < pixelCount; i += 8)
+                                if (Transparency == null)
                                 {
-                                    for (int j = 128; j >= 0; j >>= 1)
+                                    for (int i = 0; i < pixelCount; i += 8)
                                     {
-                                        write[0] = write[1] = write[2] = ((*read) & j) == 0 ? (byte)0 : (byte)255;
-                                        write[3] = 255;
-                                        write += 4;
+                                        for (int j = 128; j >= 0; j >>= 1)
+                                        {
+                                            write[0] = write[1] = write[2] = ((*read) & j) == 0 ? (byte)0 : (byte)255;
+                                            write[3] = 255;
+                                            write += 4;
+                                        }
+                                        read++;
                                     }
-                                    read++;
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < pixelCount; i += 8)
+                                    {
+                                        for (int j = 128; j >= 0; j >>= 1)
+                                        {
+                                            bool bit = ((*read) & j) != 0;
+                                            write[0] = write[1] = write[2] = bit ? (byte)255 : (byte)0;
+                                            write[3] = bit == ((Transparency[1] & 0x1) != 0) ? (byte)0 : (byte)255;
+                                            write += 4;
+                                        }
+                                        read++;
+                                    }
                                 }
                                 break;
                             case BitDepth.Two:
-                                for (int i = 0; i < pixelCount; i += 4)
+                                if (Transparency == null)
                                 {
-                                    for (int j = 7; j >= 0; j -= 2)
+                                    for (int i = 0; i < pixelCount; i += 4)
                                     {
-                                        write[0] = write[1] = write[2] = (byte)(85 * (((*read) >> j) & 0x3));
-                                        write[3] = 255;
-                                        write += 4;
+                                        for (int j = 7; j >= 0; j -= 2)
+                                        {
+                                            write[0] = write[1] = write[2] = (byte)(85 * (((*read) >> j) & 0x3));
+                                            write[3] = 255;
+                                            write += 4;
+                                        }
+                                        read++;
                                     }
-                                    read++;
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < pixelCount; i += 4)
+                                    {
+                                        for (int j = 7; j >= 0; j -= 2)
+                                        {
+                                            int bits = ((*read) >> j) & 0x3;
+                                            write[0] = write[1] = write[2] = (byte)(85 * bits);
+                                            write[3] = bits == (Transparency[1] & 0x3) ? (byte)0 : (byte)255;
+                                            write += 4;
+                                        }
+                                        read++;
+                                    }
                                 }
                                 break;
                             case BitDepth.Four:
-                                for (int i = 0; i < pixelCount; i += 2)
+                                if (Transparency == null)
                                 {
-                                    for (int j = 4; j >= 0; j -= 4)
+                                    for (int i = 0; i < pixelCount; i += 2)
                                     {
-                                        write[0] = write[1] = write[2] = (byte)(17 * (((*read) >> j) & 0xf));
-                                        write[3] = 255;
-                                        write += 4;
+                                        for (int j = 4; j >= 0; j -= 4)
+                                        {
+                                            write[0] = write[1] = write[2] = (byte)(17 * (((*read) >> j) & 0xf));
+                                            write[3] = 255;
+                                            write += 4;
+                                        }
+                                        read++;
                                     }
-                                    read++;
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < pixelCount; i += 2)
+                                    {
+                                        for (int j = 4; j >= 0; j -= 4)
+                                        {
+                                            int bits = ((*read) >> j) & 0xf;
+                                            write[0] = write[1] = write[2] = (byte)(17 * bits);
+                                            write[3] = bits == (Transparency[1] & 0xf) ? (byte)0 : (byte)255;
+                                            write += 4;
+                                        }
+                                        read++;
+                                    }
                                 }
                                 break;
                             case BitDepth.Eight:
-                                for (int i = 0; i < pixelCount; i++)
+                                if (Transparency == null)
                                 {
-                                    write[0] = write[1] = write[2] = *read;
-                                    write[3] = 255;
-                                    write += 4;
-
-                                    read++;
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        write[0] = write[1] = write[2] = *read;
+                                        write[3] = 255;
+                                        write += 4;
+                                        read++;
+                                    }
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        write[0] = write[1] = write[2] = *read;
+                                        write[3] = *read == Transparency[1] ? (byte)0 : (byte)255;
+                                        write += 4;
+                                        read++;
+                                    }
                                 }
                                 break;
                             case BitDepth.Sixteen:
-                                for (int i = 0; i < pixelCount; i++)
+                                if (Transparency == null)
                                 {
-                                    write[0] = write[1] = write[2] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
-                                    write[3] = 255;
-                                    write += 4;
-
-                                    read += 2;
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        write[0] = write[1] = write[2] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
+                                        write[3] = 255;
+                                        write += 4;
+                                        read += 2;
+                                    }
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        write[0] = write[1] = write[2] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
+                                        write[3] = (read[0] == Transparency[0] && read[1] == Transparency[1]) ? (byte)0 : (byte)255;
+                                        write += 4;
+                                        read += 2;
+                                    }
                                 }
                                 break;
                             default:
@@ -136,28 +210,67 @@ namespace ImageSharp.PNG
                         switch (BitDepth)
                         {
                             case BitDepth.Eight:
-                                for (int i = 0; i < pixelCount; i++)
+                                if (Transparency == null)
                                 {
-                                    write[0] = read[0];
-                                    write[1] = read[1];
-                                    write[2] = read[2];
-                                    write[3] = 255;
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        write[0] = read[0];
+                                        write[1] = read[1];
+                                        write[2] = read[2];
+                                        write[3] = 255;
 
-                                    write += 4;
-                                    read += 3;
+                                        write += 4;
+                                        read += 3;
+                                    }
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        write[0] = read[0];
+                                        write[1] = read[1];
+                                        write[2] = read[2];
+                                        write[3] =
+                                            read[0] == Transparency[1] && read[1] == Transparency[3] && read[2] == Transparency[5] 
+                                            ? (byte)0 : (byte)255;
+
+                                        write += 4;
+                                        read += 3;
+                                    }
                                 }
                                 break;
                             case BitDepth.Sixteen:
-                                for (int i = 0; i < pixelCount; i++)
+                                if (Transparency == null)
                                 {
-                                    write[0] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
-                                    write[1] = (byte)(((read[2] << 8) | read[3]) * sixteenToEight);
-                                    write[2] = (byte)(((read[4] << 8) | read[5]) * sixteenToEight);
-                                    write[3] = 255;
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        write[0] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
+                                        write[1] = (byte)(((read[2] << 8) | read[3]) * sixteenToEight);
+                                        write[2] = (byte)(((read[4] << 8) | read[5]) * sixteenToEight);
+                                        write[3] = 255;
 
-                                    write += 4;
-                                    read += 6;
+                                        write += 4;
+                                        read += 6;
+                                    }
                                 }
+                                else
+                                {
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        write[0] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
+                                        write[1] = (byte)(((read[2] << 8) | read[3]) * sixteenToEight);
+                                        write[2] = (byte)(((read[4] << 8) | read[5]) * sixteenToEight);
+                                        write[3] =
+                                            read[0] == Transparency[0] && read[1] == Transparency[1] &&
+                                            read[2] == Transparency[2] && read[3] == Transparency[3] &&
+                                            read[4] == Transparency[4] && read[5] == Transparency[5]
+                                            ? (byte)0 : (byte)255;
+
+                                        write += 4;
+                                        read += 6;
+                                    }
+                                }
+                                
                                 break;
                             case BitDepth.One:
                             case BitDepth.Two:
@@ -177,62 +290,135 @@ namespace ImageSharp.PNG
                             switch (BitDepth)
                             {
                                 case BitDepth.One:
-
-                                    for (int i = 0; i < pixelCount; i += 8)
+                                    if (Transparency == null)
                                     {
-                                        for (int j = 128; j >= 0; j >>= 1)
+                                        for (int i = 0; i < pixelCount; i += 8)
                                         {
-                                            byte index = ((*read) & j) == 0 ? (byte)0 : (byte)255;
-                                            write[0] = palette[index].Red;
-                                            write[1] = palette[index].Green;
-                                            write[2] = palette[index].Blue;
-                                            write[3] = 255;
-                                            write += 4;
+                                            for (int j = 7; j >= 0; j--)
+                                            {
+                                                byte index = (byte)((*read) >> j);
+                                                write[0] = palette[index].Red;
+                                                write[1] = palette[index].Green;
+                                                write[2] = palette[index].Blue;
+                                                write[3] = 255;
+                                                write += 4;
+                                            }
+                                            read++;
                                         }
-                                        read++;
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < pixelCount; i += 8)
+                                        {
+                                            for (int j = 7; j >= 0; j--)
+                                            {
+                                                byte index = (byte)((*read) >> j);
+                                                write[0] = palette[index].Red;
+                                                write[1] = palette[index].Green;
+                                                write[2] = palette[index].Blue;
+                                                write[3] = index < Transparency.Length ? Transparency[index] : (byte)255;
+                                                write += 4;
+                                            }
+                                            read++;
+                                        }
                                     }
                                     break;
                                 case BitDepth.Two:
-                                    for (int i = 0; i < pixelCount; i += 4)
+                                    if (Transparency == null)
                                     {
-                                        for (int j = 7; j >= 0; j -= 2)
+                                        for (int i = 0; i < pixelCount; i += 4)
                                         {
-                                            byte index = (byte)(((*read) >> j) & 0x3);
-                                            write[0] = palette[index].Red;
-                                            write[1] = palette[index].Green;
-                                            write[2] = palette[index].Blue;
-                                            write[3] = 255;
-                                            write += 4;
+                                            for (int j = 7; j >= 0; j -= 2)
+                                            {
+                                                byte index = (byte)(((*read) >> j) & 0x3);
+                                                write[0] = palette[index].Red;
+                                                write[1] = palette[index].Green;
+                                                write[2] = palette[index].Blue;
+                                                write[3] = 255;
+                                                write += 4;
+                                            }
+                                            read++;
                                         }
-                                        read++;
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < pixelCount; i += 4)
+                                        {
+                                            for (int j = 7; j >= 0; j -= 2)
+                                            {
+                                                byte index = (byte)(((*read) >> j) & 0x3);
+                                                write[0] = palette[index].Red;
+                                                write[1] = palette[index].Green;
+                                                write[2] = palette[index].Blue;
+                                                write[3] = index < Transparency.Length ? Transparency[index] : (byte)255;
+                                                write += 4;
+                                            }
+                                            read++;
+                                        }
                                     }
                                     break;
                                 case BitDepth.Four:
-                                    for (int i = 0; i < pixelCount; i += 2)
+                                    if (Transparency == null)
                                     {
-                                        for (int j = 4; j >= 0; j -= 4)
+                                        for (int i = 0; i < pixelCount; i += 2)
                                         {
-                                            byte index = (byte)(((*read) >> j) & 0xf);
+                                            for (int j = 4; j >= 0; j -= 4)
+                                            {
+                                                byte index = (byte)(((*read) >> j) & 0xf);
+                                                write[0] = palette[index].Red;
+                                                write[1] = palette[index].Green;
+                                                write[2] = palette[index].Blue;
+                                                write[3] = 255;
+                                                write += 4;
+                                            }
+                                            read++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < pixelCount; i += 2)
+                                        {
+                                            for (int j = 4; j >= 0; j -= 4)
+                                            {
+                                                byte index = (byte)(((*read) >> j) & 0xf);
+                                                write[0] = palette[index].Red;
+                                                write[1] = palette[index].Green;
+                                                write[2] = palette[index].Blue;
+                                                write[3] = index < Transparency.Length ? Transparency[index] : (byte)255;
+                                                write += 4;
+                                            }
+                                            read++;
+                                        }
+                                    }
+                                    break;
+                                case BitDepth.Eight:
+                                    if (Transparency == null)
+                                    {
+                                        for (int i = 0; i < pixelCount; i++)
+                                        {
+                                            byte index = *read;
                                             write[0] = palette[index].Red;
                                             write[1] = palette[index].Green;
                                             write[2] = palette[index].Blue;
                                             write[3] = 255;
-                                            write += 4;
-                                        }
-                                        read++;
-                                    }
-                                    break;
-                                case BitDepth.Eight:
-                                    for (int i = 0; i < pixelCount; i++)
-                                    {
-                                        byte index = *read;
-                                        write[0] = palette[index].Red;
-                                        write[1] = palette[index].Green;
-                                        write[2] = palette[index].Blue;
-                                        write[3] = 255;
 
-                                        write += 4;
-                                        read++;
+                                            write += 4;
+                                            read++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < pixelCount; i++)
+                                        {
+                                            byte index = *read;
+                                            write[0] = palette[index].Red;
+                                            write[1] = palette[index].Green;
+                                            write[2] = palette[index].Blue;
+                                            write[3] = index < Transparency.Length ? Transparency[index] : (byte)255;
+
+                                            write += 4;
+                                            read++;
+                                        }
                                     }
                                     break;
                                 case BitDepth.Sixteen:
