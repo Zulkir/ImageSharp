@@ -44,6 +44,23 @@ namespace ImageSharp.PNG
         public byte[] Data { get; private set; }
 
         #region Convert
+        public unsafe void ToRgba8(byte[] dest, int byteOffset = 0)
+        {
+            if (dest == null)
+                throw new ArgumentNullException("dest");
+
+            if (byteOffset < 0)
+                throw new ArgumentException("byteOffset cannot be negative");
+
+            if (dest.Length - byteOffset < Width * Height * 4)
+                throw new ArgumentException("dest buffer is not large enough to contain image data");
+
+            fixed (byte* pDest = dest)
+            {
+                ToRgba8(pDest + byteOffset);
+            }
+        }
+
         public unsafe void ToRgba8(byte* dest)
         {
             int pixelCount = Width * Height;
@@ -468,7 +485,7 @@ namespace ImageSharp.PNG
                     switch (BitDepth)
                     {
                         case BitDepth.Eight:
-                            Marshal.Copy(Data, 0, (IntPtr)dest, Helper.SizeOfImageData(Width, Height, ColorType, BitDepth));
+                            Marshal.Copy(Data, 0, (IntPtr)dest, pixelCount * 4);
                             break;
                         case BitDepth.Sixteen:
                             fixed (byte* source = Data)
