@@ -58,14 +58,11 @@ namespace ImageSharp.ConsoleTester
             Run();
         }
 
-        static unsafe void Run()
+        static void Run()
         {
             var img = new PngImage(File.ReadAllBytes("../Textures/Kyuubey.png"));
             var bmpImage = new BmpImage(img.Width, img.Height, BPP.ThirtyTwo);
-            fixed (byte* bmpData = bmpImage.Data)
-            {
-                img.ToRgba8(bmpData);
-            }
+            img.ToRgba8(bmpImage.Data);
             bmpImage.SaveToFile("output.bmp");
         }
     }
