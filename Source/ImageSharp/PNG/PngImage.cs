@@ -32,17 +32,281 @@ namespace ImageSharp.PNG
 {
     public class PngImage
     {
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public BitDepth BitDepth { get; set; }
-        public ColorType ColorType { get; set; }
-        public CompressionMethod CompressionMethod { get; set; }
-        public FilterMethod FilterMethod { get; set; }
-        public InterlaceMethod InterlaceMethod { get; set; }
-        public Palette Palette { get; set; }
-        public byte[] Transparency { get; set; }
-        public byte[] Data { get; set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public BitDepth BitDepth { get; private set; }
+        public ColorType ColorType { get; private set; }
+        public CompressionMethod CompressionMethod { get; private set; }
+        public FilterMethod FilterMethod { get; private set; }
+        public InterlaceMethod InterlaceMethod { get; private set; }
+        public Palette Palette { get; private set; }
+        public byte[] Transparency { get; private set; }
+        public byte[] Data { get; private set; }
 
+        #region Convert
+        public unsafe void ToRgba8(byte* dest)
+        {
+            int pixelCount = Width * Height;
+            byte* write = dest;
+
+            const double sixteenToEight = (255.0 / ((1 << 16) - 1) + 0.5);
+
+            switch (ColorType)
+            {
+                case ColorType.Grayscale:
+                    fixed (byte* source = Data)
+                    {
+                        byte* read = source;
+                        switch (BitDepth)
+                        {
+                            case BitDepth.One:
+                                
+                                for (int i = 0; i < pixelCount; i += 8)
+                                {
+                                    for (int j = 128; j >= 0; j >>= 1)
+                                    {
+                                        write[0] = write[1] = write[2] = ((*read) & j) == 0 ? (byte)0 : (byte)255;
+                                        write[3] = 255;
+                                        write += 4;
+                                    }
+                                    read++;
+                                }
+                                break;
+                            case BitDepth.Two:
+                                for (int i = 0; i < pixelCount; i += 4)
+                                {
+                                    for (int j = 7; j >= 0; j -= 2)
+                                    {
+                                        write[0] = write[1] = write[2] = (byte)(85 * (((*read) >> j) & 0x3));
+                                        write[3] = 255;
+                                        write += 4;
+                                    }
+                                    read++;
+                                }
+                                break;
+                            case BitDepth.Four:
+                                for (int i = 0; i < pixelCount; i += 2)
+                                {
+                                    for (int j = 4; j >= 0; j -= 4)
+                                    {
+                                        write[0] = write[1] = write[2] = (byte)(17 * (((*read) >> j) & 0xf));
+                                        write[3] = 255;
+                                        write += 4;
+                                    }
+                                    read++;
+                                }
+                                break;
+                            case BitDepth.Eight:
+                                for (int i = 0; i < pixelCount; i++)
+                                {
+                                    write[0] = write[1] = write[2] = *read;
+                                    write[3] = 255;
+                                    write += 4;
+
+                                    read++;
+                                }
+                                break;
+                            case BitDepth.Sixteen:
+                                for (int i = 0; i < pixelCount; i++)
+                                {
+                                    write[0] = write[1] = write[2] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
+                                    write[3] = 255;
+                                    write += 4;
+
+                                    read += 2;
+                                }
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    break;
+                case ColorType.TrueColor:
+                    fixed (byte* source = Data)
+                    {
+                        byte* read = source;
+                        switch (BitDepth)
+                        {
+                            case BitDepth.Eight:
+                                for (int i = 0; i < pixelCount; i++)
+                                {
+                                    write[0] = read[0];
+                                    write[1] = read[1];
+                                    write[2] = read[2];
+                                    write[3] = 255;
+
+                                    write += 4;
+                                    read += 3;
+                                }
+                                break;
+                            case BitDepth.Sixteen:
+                                for (int i = 0; i < pixelCount; i++)
+                                {
+                                    write[0] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
+                                    write[1] = (byte)(((read[2] << 8) | read[3]) * sixteenToEight);
+                                    write[2] = (byte)(((read[4] << 8) | read[5]) * sixteenToEight);
+                                    write[3] = 255;
+
+                                    write += 4;
+                                    read += 6;
+                                }
+                                break;
+                            case BitDepth.One:
+                            case BitDepth.Two:
+                            case BitDepth.Four:
+                                throw new NotSupportedException();
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    break;
+                case ColorType.PaletteColor:
+                    fixed (byte* source = Data)
+                    {
+                        fixed (PaletteEntry* palette = Palette.Entries)
+                        {
+                            byte* read = source;
+                            switch (BitDepth)
+                            {
+                                case BitDepth.One:
+
+                                    for (int i = 0; i < pixelCount; i += 8)
+                                    {
+                                        for (int j = 128; j >= 0; j >>= 1)
+                                        {
+                                            byte index = ((*read) & j) == 0 ? (byte)0 : (byte)255;
+                                            write[0] = palette[index].Red;
+                                            write[1] = palette[index].Green;
+                                            write[2] = palette[index].Blue;
+                                            write[3] = 255;
+                                            write += 4;
+                                        }
+                                        read++;
+                                    }
+                                    break;
+                                case BitDepth.Two:
+                                    for (int i = 0; i < pixelCount; i += 4)
+                                    {
+                                        for (int j = 7; j >= 0; j -= 2)
+                                        {
+                                            byte index = (byte)(((*read) >> j) & 0x3);
+                                            write[0] = palette[index].Red;
+                                            write[1] = palette[index].Green;
+                                            write[2] = palette[index].Blue;
+                                            write[3] = 255;
+                                            write += 4;
+                                        }
+                                        read++;
+                                    }
+                                    break;
+                                case BitDepth.Four:
+                                    for (int i = 0; i < pixelCount; i += 2)
+                                    {
+                                        for (int j = 4; j >= 0; j -= 4)
+                                        {
+                                            byte index = (byte)(((*read) >> j) & 0xf);
+                                            write[0] = palette[index].Red;
+                                            write[1] = palette[index].Green;
+                                            write[2] = palette[index].Blue;
+                                            write[3] = 255;
+                                            write += 4;
+                                        }
+                                        read++;
+                                    }
+                                    break;
+                                case BitDepth.Eight:
+                                    for (int i = 0; i < pixelCount; i++)
+                                    {
+                                        byte index = *read;
+                                        write[0] = palette[index].Red;
+                                        write[1] = palette[index].Green;
+                                        write[2] = palette[index].Blue;
+                                        write[3] = 255;
+
+                                        write += 4;
+                                        read++;
+                                    }
+                                    break;
+                                case BitDepth.Sixteen:
+                                    throw new NotSupportedException();
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+                        }
+                    }
+                    break;
+                case ColorType.GrayscaleAlpha:
+                    fixed (byte* source = Data)
+                    {
+                        byte* read = source;
+                        switch (BitDepth)
+                        {
+                            case BitDepth.Eight:
+                                for (int i = 0; i < pixelCount; i++)
+                                {
+                                    write[0] = write[1] = write[2] = read[0];
+                                    write[3] = read[1];
+
+                                    write += 4;
+                                    read += 2;
+                                }
+                                break;
+                            case BitDepth.Sixteen:
+                                for (int i = 0; i < pixelCount; i++)
+                                {
+                                    write[0] = write[1] = write[2] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
+                                    write[3] = (byte)(((read[2] << 8) | read[3]) * sixteenToEight);
+
+                                    write += 4;
+                                    read += 4;
+                                }
+                                break;
+                            case BitDepth.One:
+                            case BitDepth.Two:
+                            case BitDepth.Four:
+                                throw new NotSupportedException();
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    break;
+                case ColorType.TrueColorAlpha:
+                    switch (BitDepth)
+                    {
+                        case BitDepth.Eight:
+                            Marshal.Copy(Data, 0, (IntPtr)dest, pixelCount);
+                            break;
+                        case BitDepth.Sixteen:
+                            fixed (byte* source = Data)
+                            {
+                                byte* read = source;
+                                for (int i = 0; i < pixelCount; i++)
+                                {
+                                    write[0] = (byte)(((read[0] << 8) | read[1]) * sixteenToEight);
+                                    write[1] = (byte)(((read[2] << 8) | read[3]) * sixteenToEight);
+                                    write[2] = (byte)(((read[4] << 8) | read[5]) * sixteenToEight);
+                                    write[3] = (byte)(((read[6] << 8) | read[7]) * sixteenToEight);
+
+                                    write += 4;
+                                    read += 8;
+                                }
+                            }
+                            break;
+                        case BitDepth.One:
+                        case BitDepth.Two:
+                        case BitDepth.Four:
+                            throw new NotSupportedException();
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+        #endregion
+
+        #region Decode
         public unsafe PngImage(byte[] fileData, int byteOffset = 0)
         {
             fixed (byte* pFileData = fileData)
@@ -292,5 +556,6 @@ namespace ImageSharp.PNG
 
             // Done
         }
+        #endregion
     }
 }
