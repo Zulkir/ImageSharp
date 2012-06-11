@@ -468,7 +468,7 @@ namespace ImageSharp.PNG
                     switch (BitDepth)
                     {
                         case BitDepth.Eight:
-                            Marshal.Copy(Data, 0, (IntPtr)dest, pixelCount);
+                            Marshal.Copy(Data, 0, (IntPtr)dest, Helper.SizeOfImageData(Width, Height, ColorType, BitDepth));
                             break;
                         case BitDepth.Sixteen:
                             fixed (byte* source = Data)
