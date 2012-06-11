@@ -49,6 +49,14 @@ namespace ImageSharp.PNG
             int pixelCount = Width * Height;
             byte* write = dest;
 
+            GCHandle handle = default(GCHandle);
+            if (InterlaceMethod == InterlaceMethod.Adam7)
+            {
+                var interlacedData = new int[pixelCount];
+                handle = GCHandle.Alloc(interlacedData, GCHandleType.Pinned);
+                write = (byte*)handle.AddrOfPinnedObject();
+            }
+
             const double sixteenToEight = (255.0 / ((1 << 16) - 1) + 0.5);
 
             switch (ColorType)
@@ -303,6 +311,92 @@ namespace ImageSharp.PNG
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            if (InterlaceMethod == InterlaceMethod.Adam7)
+            {
+                #region Deinterlace
+                int* interlaced = (int*)handle.AddrOfPinnedObject();
+                int* regular = (int*) dest;
+
+                int width = Width;
+                int height = Height;
+
+                for (int pass = 1; pass <= 7; pass++)
+                {
+                    int xInit;
+                    int yInit;
+                    int xAdd;
+                    int yAdd;
+
+                    switch (pass)
+                    {
+                        case 1:
+                            xInit = 0;
+                            yInit = 0;
+                            xAdd = 8;
+                            yAdd = 8 * width;
+                            break;
+                        case 2:
+                            xInit = 4;
+                            yInit = 0;
+                            xAdd = 8;
+                            yAdd = 8 * width;
+                            break;
+                        case 3:
+                            xInit = 0;
+                            yInit = 4;
+                            xAdd = 4;
+                            yAdd = 8 * width;
+                            break;
+                        case 4:
+                            xInit = 2;
+                            yInit = 0;
+                            xAdd = 4;
+                            yAdd = 4 * width;
+                            break;
+                        case 5:
+                            xInit = 0;
+                            yInit = 2;
+                            xAdd = 2;
+                            yAdd = 4 * width;
+                            break;
+                        case 6:
+                            xInit = 1;
+                            yInit = 0;
+                            xAdd = 2;
+                            yAdd = 2 * width;
+                            break;
+                        case 7:
+                            xInit = 0;
+                            yInit = 1;
+                            xAdd = 1;
+                            yAdd = 2 * width;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    int xOffset = xInit;
+                    int yOffset = yInit;
+
+                    while (yOffset < pixelCount)
+                    {
+                        if (xOffset >= width)
+                        {
+                            xOffset = xInit;
+                            yOffset += yAdd;
+                            continue;
+                        }
+
+                        regular[yOffset + xOffset] = *interlaced;
+                        xOffset += xAdd;
+                        interlaced++;
+                    }
+                }
+
+                handle.Free();
+                #endregion
+            }
         }
         #endregion
 
@@ -463,7 +557,7 @@ namespace ImageSharp.PNG
             {
                 int numPasses = InterlaceMethod == InterlaceMethod.Adam7 ? 7 : 1;
 
-                for (int pass = 0; pass < numPasses; pass++)
+                for (int pass = 1; pass <= numPasses; pass++)
                 {
                     int passWidthInBytes = Helper.SizeOfImageRow(
                         InterlaceMethod == InterlaceMethod.Adam7 ? Helper.InterlacedPassWidth(pass, Width) : Width, 

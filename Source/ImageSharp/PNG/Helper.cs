@@ -71,13 +71,28 @@ namespace ImageSharp.PNG
         {
             switch (pass)
             {
-                case 1: return (baseWidth % 8) == 0 ? baseWidth / 8 : baseWidth / 8 + 1;
-                case 2: return (baseWidth % 8) == 0 ? baseWidth / 8 : baseWidth / 8 + 1;
-                case 3: return (baseWidth % 4) == 0 ? baseWidth / 4 : baseWidth / 4 + 1;
-                case 4: return (baseWidth % 4) != 3 ? baseWidth / 4 : baseWidth / 4 + 1;
-                case 5: return (baseWidth % 2) == 0 ? baseWidth / 2 : baseWidth / 2 + 1;
+                case 1: return (baseWidth % 8) < 1 ? baseWidth / 8 : baseWidth / 8 + 1;
+                case 2: return (baseWidth % 8) < 5 ? baseWidth / 8 : baseWidth / 8 + 1;
+                case 3: return (baseWidth % 4) < 1 ? baseWidth / 4 : baseWidth / 4 + 1;
+                case 4: return (baseWidth % 4) < 3 ? baseWidth / 4 : baseWidth / 4 + 1;
+                case 5: return (baseWidth % 2) < 1 ? baseWidth / 2 : baseWidth / 2 + 1;
                 case 6: return baseWidth / 2;
                 case 7: return baseWidth;
+                default: throw new ArgumentOutOfRangeException("pass");
+            }
+        }
+
+        public static int InterlacedPassHeight(int pass, int baseHeight)
+        {
+            switch (pass)
+            {
+                case 1: return (baseHeight % 8) < 1 ? baseHeight / 8 : baseHeight / 8 + 1;
+                case 2: return (baseHeight % 8) < 1 ? baseHeight / 8 : baseHeight / 8 + 1;
+                case 3: return (baseHeight % 8) < 5 ? baseHeight / 8 : baseHeight / 8 + 1;
+                case 4: return (baseHeight % 4) < 1 ? baseHeight / 4 : baseHeight / 4 + 1;
+                case 5: return (baseHeight % 4) < 3 ? baseHeight / 4 : baseHeight / 4 + 1;
+                case 6: return (baseHeight % 2) < 1 ? baseHeight / 2 : baseHeight / 2 + 1;
+                case 7: return baseHeight / 2;
                 default: throw new ArgumentOutOfRangeException("pass");
             }
         }
