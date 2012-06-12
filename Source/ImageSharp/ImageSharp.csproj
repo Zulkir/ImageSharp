@@ -43,6 +43,17 @@
     <Compile Include="BMP\Compression.cs" />
     <Compile Include="BMP\Helper.cs" />
     <Compile Include="BMP\DibHeader.cs" />
+    <Compile Include="DDS\Caps.cs" />
+    <Compile Include="DDS\Caps2.cs" />
+    <Compile Include="DDS\DxgiFormat.cs" />
+    <Compile Include="DDS\HeaderDx10.cs" />
+    <Compile Include="DDS\HeaderFlags.cs" />
+    <Compile Include="DDS\Header.cs" />
+    <Compile Include="DDS\PixelFormat.cs" />
+    <Compile Include="DDS\DdsTexture.cs" />
+    <Compile Include="DDS\PixelFormatFlags.cs" />
+    <Compile Include="DDS\ResourceDimension.cs" />
+    <Compile Include="DDS\ResourceMiscFlags.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="PNG\BitDepth.cs" />
     <Compile Include="PNG\ChunkBeginning.cs" />

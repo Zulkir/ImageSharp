@@ -24,8 +24,6 @@ freely, subject to the following restrictions:
 #endregion
 
 using System;
-using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Text;
 using ImageSharp.BMP;
