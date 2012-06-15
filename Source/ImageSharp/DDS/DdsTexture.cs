@@ -23,9 +23,51 @@ freely, subject to the following restrictions:
 */
 #endregion
 
+using System;
+using System.IO;
+
 namespace ImageSharp.DDS
 {
     public class DdsTexture
     {
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public int Depth { get; private set; }
+        public DxgiFormat DxgiFormat { get; private set; }
+        public D3DFormat D3DFormat { get; private set; }
+        public byte[][] MipChains { get; private set; }
+        public MipInfo[] MipInfos { get; private set; }
+
+        public unsafe DdsTexture(byte[] fileData, int byteOffset = 0)
+        {
+            fixed (byte* pFileData = fileData)
+            {
+                byte* p = pFileData + byteOffset;
+                int remaining = fileData.Length - byteOffset;
+
+                if (remaining < 128)
+                    throw new InvalidDataException("File data ends abruptly");
+                remaining -= 128;
+
+                if (*(uint*)p != Helper.Magic)
+                    throw new InvalidDataException("'DDS ' magic number is missing or incorect");
+                p += 4;
+
+                var pHeader = (Header*)p;
+                p += Header.StructLength;
+
+                if (pHeader->StructSize != Header.StructLength)
+                    throw new InvalidDataException("Header structure size must be 124 bytes");
+
+                if ((pHeader->Flags & (HeaderFlags.Caps | HeaderFlags.Width | HeaderFlags.Height | HeaderFlags.PixelFormat)) != 0)
+                    throw new InvalidDataException("One of the required header flags is missing");
+
+                Width = (int)pHeader->Width;
+                Height = (int)pHeader->Height;
+                Depth = pHeader->Flags.HasFlag(HeaderFlags.Depth) ? (int)pHeader->Depth : 1;
+
+                
+            }
+        }
     }
 }

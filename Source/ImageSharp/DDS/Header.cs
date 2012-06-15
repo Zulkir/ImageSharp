@@ -30,6 +30,8 @@ namespace ImageSharp.DDS
     [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 124)]
     public struct Header
     {
+        public const uint StructLength = 124;
+
         /// <summary>
         /// Size of structure. This member must be set to 124.
         /// </summary>

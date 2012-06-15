@@ -45,10 +45,13 @@
     <Compile Include="BMP\DibHeader.cs" />
     <Compile Include="DDS\Caps.cs" />
     <Compile Include="DDS\Caps2.cs" />
+    <Compile Include="DDS\D3DFormat.cs" />
     <Compile Include="DDS\DxgiFormat.cs" />
     <Compile Include="DDS\HeaderDx10.cs" />
     <Compile Include="DDS\HeaderFlags.cs" />
     <Compile Include="DDS\Header.cs" />
+    <Compile Include="DDS\Helper.cs" />
+    <Compile Include="DDS\MipInfo.cs" />
     <Compile Include="DDS\PixelFormat.cs" />
     <Compile Include="DDS\DdsTexture.cs" />
     <Compile Include="DDS\PixelFormatFlags.cs" />
