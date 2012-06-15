@@ -608,7 +608,7 @@ namespace ImageSharp.PNG
         {
             fixed (byte* pFileData = fileData)
             {
-                byte* p = pFileData;
+                byte* p = pFileData + byteOffset;
                 int remaining = fileData.Length - byteOffset;
 
                 // Signature
