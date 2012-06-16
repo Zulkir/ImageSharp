@@ -30,7 +30,6 @@ namespace ImageSharp.DDS
         public int Width;
         public int Height;
         public int Depth;
-        public int RowPitch;
         public int OffsetInBytes;
         public int SizeInBytes;
     }

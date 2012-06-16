@@ -198,11 +198,11 @@ namespace ImageSharp.DDS
                             d3dFormat = D3DFormat.Unknown;
                             return;
                         case RGBG:
-                            dxgiFormat = DxgiFormat.R8G8_B8G8_UNORM;
+                            dxgiFormat = DxgiFormat.G8R8_G8B8_UNORM;
                             d3dFormat = D3DFormat.R8G8_B8G8;
                             return;
                         case GRGB:
-                            dxgiFormat = DxgiFormat.G8R8_G8B8_UNORM;
+                            dxgiFormat = DxgiFormat.R8G8_B8G8_UNORM;
                             d3dFormat = D3DFormat.G8R8_G8B8;
                             return;
                         case 36:
@@ -269,6 +269,73 @@ namespace ImageSharp.DDS
 
             dxgiFormat = DxgiFormat.UNKNOWN;
             d3dFormat = D3DFormat.Unknown;
+        }
+
+        public static D3DFormat D3DFormatFromDxgi(DxgiFormat dxgiFormat)
+        {
+            switch (dxgiFormat)
+            {
+                case DxgiFormat.R32G32B32A32_FLOAT: return D3DFormat.A32B32G32R32F;
+                case DxgiFormat.R16G16B16A16_FLOAT: return D3DFormat.A16B16G16R16F;
+                case DxgiFormat.R16G16B16A16_UNORM: return D3DFormat.A16B16G16R16;
+                case DxgiFormat.R32G32_FLOAT: return D3DFormat.G32R32F;
+                case DxgiFormat.R10G10B10A2_UNORM: return D3DFormat.A2B10G10R10;
+                case DxgiFormat.R8G8B8A8_UNORM: return D3DFormat.A8B8G8R8;
+                case DxgiFormat.R16G16_FLOAT: return D3DFormat.G16R16F;
+                case DxgiFormat.R16G16_UNORM: return D3DFormat.G16R16;
+                case DxgiFormat.R32_FLOAT: return D3DFormat.R32F;
+                case DxgiFormat.R16_FLOAT: return D3DFormat.R16F;
+                case DxgiFormat.A8_UNORM: return D3DFormat.A8;
+                case DxgiFormat.R8G8_B8G8_UNORM: return D3DFormat.G8R8_G8B8;
+                case DxgiFormat.G8R8_G8B8_UNORM: return D3DFormat.R8G8_B8G8;
+                case DxgiFormat.BC3_UNORM: return D3DFormat.Dxt5;
+                case DxgiFormat.B5G6R5_UNORM: return D3DFormat.R5G6B5;
+                case DxgiFormat.B5G5R5A1_UNORM: return D3DFormat.A1R5G5B5;
+                case DxgiFormat.B8G8R8A8_UNORM: return D3DFormat.A8R8G8B8;
+                case DxgiFormat.B8G8R8X8_UNORM: return D3DFormat.X8R8G8B8;
+                default: return D3DFormat.Unknown;
+            }
+        }
+
+        public static bool IsFormatCompressed(DxgiFormat dxgiFormat, D3DFormat d3dFormat)
+        {
+            switch (dxgiFormat)
+            {
+                case DxgiFormat.BC1_TYPELESS:
+                case DxgiFormat.BC1_UNORM:
+                case DxgiFormat.BC1_UNORM_SRGB:
+                case DxgiFormat.BC2_TYPELESS:
+                case DxgiFormat.BC2_UNORM:
+                case DxgiFormat.BC2_UNORM_SRGB:
+                case DxgiFormat.BC3_TYPELESS:
+                case DxgiFormat.BC3_UNORM:
+                case DxgiFormat.BC3_UNORM_SRGB:
+                case DxgiFormat.BC4_TYPELESS:
+                case DxgiFormat.BC4_UNORM:
+                case DxgiFormat.BC4_SNORM:
+                case DxgiFormat.BC5_TYPELESS:
+                case DxgiFormat.BC5_UNORM:
+                case DxgiFormat.BC5_SNORM:
+                case DxgiFormat.BC6H_TYPELESS:
+                case DxgiFormat.BC6H_UF16:
+                case DxgiFormat.BC6H_SF16:
+                case DxgiFormat.BC7_TYPELESS:
+                case DxgiFormat.BC7_UNORM:
+                case DxgiFormat.BC7_UNORM_SRGB:
+                    return true;
+            }
+
+            switch (d3dFormat)
+            {
+                case D3DFormat.Dxt1:
+                case D3DFormat.Dxt2:
+                case D3DFormat.Dxt3:
+                case D3DFormat.Dxt4:
+                case D3DFormat.Dxt5:
+                    return true;
+            }
+
+            return false;
         }
 
         public const uint Magic = 0x20534444; // 'DDS '

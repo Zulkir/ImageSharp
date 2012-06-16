@@ -30,6 +30,8 @@ namespace ImageSharp.DDS
     [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 32)]
     public struct HeaderDx10
     {
+        public const int StructLength = 32;
+
         /// <summary>
         /// The surface pixel format.
         /// </summary>
