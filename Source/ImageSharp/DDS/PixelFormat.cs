@@ -30,6 +30,8 @@ namespace ImageSharp.DDS
     [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 32)]
     public struct PixelFormat
     {
+        public const int StructLength = 32;
+
         /// <summary>
         /// Structure size; set to 32 (bytes).
         /// </summary>

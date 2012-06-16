@@ -31,6 +31,11 @@ namespace ImageSharp.DDS
     public enum ResourceMiscFlags : uint
     {
         /// <summary>
+        /// Specifies no flags.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
         /// Enables an application to call ID3D10Device::GenerateMips on a texture resource. 
         /// The resource must be created with the bind flags that specify that 
         /// the resource is a render target and a shader resource.

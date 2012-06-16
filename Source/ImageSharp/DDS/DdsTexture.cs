@@ -36,8 +36,8 @@ namespace ImageSharp.DDS
         public int Height { get; private set; }
         public int Depth { get; private set; }
         public D3DFormat D3DFormat { get; private set; }
-        public ResourceDimension Dimension { get; private set; }
-        public ResourceMiscFlags MiscFlags { get; private set; }
+        public ResourceDimension Dimension10 { get; private set; }
+        public ResourceMiscFlags MiscFlags10 { get; private set; }
         public byte[][] Data { get; private set; }
         public MipInfo[] MipInfos { get; private set; }
 
@@ -61,24 +61,24 @@ namespace ImageSharp.DDS
             if (mipCount < 0)
                 throw new ArgumentException("Mip count must can not be negative");
             if (dimension != ResourceDimension.Unknown && dimension != ResourceDimension.Texture3D && depth != 1)
-                throw new ArgumentException(string.Format("Dimension is {0}, but Depth is not 1", dimension));
+                throw new ArgumentException(string.Format("Dimension10 is {0}, but Depth is not 1", dimension));
             if ((dimension == ResourceDimension.Buffer || dimension == ResourceDimension.Texture1D) && height != 1)
-                throw new ArgumentException(string.Format("Dimension is {0}, but Height is not 1", dimension));
+                throw new ArgumentException(string.Format("Dimension10 is {0}, but Height is not 1", dimension));
             if (dimension == ResourceDimension.Buffer && mipCount > 1)
-                throw new ArgumentException("Dimension is Buffer, but MipCount is not 0 or 1");
+                throw new ArgumentException("Dimension10 is Buffer, but MipCount is not 0 or 1");
 
             Width = width;
             Height = height;
             Depth = depth;
-
+            /*
             if (depth != 1)
-                Dimension = ResourceDimension.Texture3D;
+                Dimension10 = ResourceDimension.Texture3D;
             else if (height != 1)
-                Dimension = ResourceDimension.Texture2D;
+                Dimension10 = ResourceDimension.Texture2D;
             else
-                Dimension = ResourceDimension.Texture1D;
+                Dimension10 = ResourceDimension.Texture1D;*/
 
-            MiscFlags = miscFlags;
+            MiscFlags10 = miscFlags;
 
             D3DFormat = Helper.D3DFormatFromDxgi(dxgiFormat);
 
@@ -143,17 +143,14 @@ namespace ImageSharp.DDS
                 Height = (int)pHeader->Height;
                 Depth = pHeader->Flags.HasFlag(HeaderFlags.Depth) ? (int)pHeader->Depth : 1;
 
+                if (pHeader->PixelFormat.StructSize != PixelFormat.StructLength)
+                    throw new InvalidDataException("PixelFormat structure size must be 32 bytes");
+
                 int chainSize;
                 bool dataAlreadyCopied = false;
 
                 if (pHeader->PixelFormat.FourCC != Helper.DX10)
                 {
-                    Dimension = pHeader->Caps.HasFlag(Caps.Complex) && pHeader->Caps2.HasFlag(Caps2.Volume)
-                        ? ResourceDimension.Texture3D
-                        : Height == 1
-                                ? ResourceDimension.Texture1D
-                                : ResourceDimension.Texture2D;
-
                     DxgiFormat dxgiFormat;
                     D3DFormat d3dFormat;
                     Helper.DetermineFormat(ref pHeader->PixelFormat, out dxgiFormat, out d3dFormat);
@@ -172,8 +169,6 @@ namespace ImageSharp.DDS
                     }
                     else
                     {
-                        MiscFlags |= ResourceMiscFlags.TextureCube;
-
                         Data = new byte[6][];
 
                         for (int i = 0; i < 6; i++)
@@ -201,8 +196,8 @@ namespace ImageSharp.DDS
                     var pHeaderDx10 = (HeaderDx10*)p;
                     p += HeaderDx10.StructLength;
 
-                    Dimension = pHeaderDx10->ResourceDimension;
-                    MiscFlags = pHeaderDx10->MiscFlags;
+                    Dimension10 = pHeaderDx10->ResourceDimension;
+                    MiscFlags10 = pHeaderDx10->MiscFlags;
 
                     DxgiFormat = pHeaderDx10->Format;
                     D3DFormat = Helper.D3DFormatFromDxgi(DxgiFormat);
@@ -230,6 +225,128 @@ namespace ImageSharp.DDS
                         p += chainSize;
                     }
                 }
+            }
+        }
+
+        public unsafe void SaveToStream(Stream stream)
+        {
+            bool dx10 = false;
+
+            var headersData = new byte[4 + Header.StructLength + HeaderDx10.StructLength];
+            fixed (byte* pHeaders = headersData)
+            {
+                *(uint*)pHeaders = Helper.Magic;
+
+                var pHeader = (Header*)(pHeaders + 4);
+                pHeader->StructSize = Header.StructLength;
+                pHeader->Flags = HeaderFlags.Caps | HeaderFlags.Height | HeaderFlags.Width | HeaderFlags.PixelFormat;
+                pHeader->Height = (uint)Height;
+                pHeader->Width = (uint)Width;
+
+                if (Depth > 1 || Dimension10 == ResourceDimension.Texture3D)
+                {
+                    pHeader->Flags |= HeaderFlags.Depth;
+                    pHeader->Depth = (uint)Depth;
+                }
+                    
+                if (MipInfos.Length > 1)
+                {
+                    pHeader->Flags |= HeaderFlags.MipMapCount;
+                    pHeader->MipMapCount = (uint)MipInfos.Length;
+                }
+
+                pHeader->PixelFormat.StructSize = PixelFormat.StructLength;
+                if (Dimension10 == ResourceDimension.Unknown && MiscFlags10 == ResourceMiscFlags.None)
+                {
+                    switch (DxgiFormat)
+                    {
+                        case DxgiFormat.R8G8B8A8_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.Rgb | PixelFormatFlags.AlphaPixels;
+                            pHeader->PixelFormat.RgbBitCount = 32;
+                            pHeader->PixelFormat.RBitMask = 0x000000ff;
+                            pHeader->PixelFormat.GBitMask = 0x0000ff00;
+                            pHeader->PixelFormat.BBitMask = 0x00ff0000;
+                            pHeader->PixelFormat.ABitMask = 0xff000000;
+                            break;
+                        case DxgiFormat.R16G16_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.Rgb;
+                            pHeader->PixelFormat.RgbBitCount = 32;
+                            pHeader->PixelFormat.RBitMask = 0x0000ffff;
+                            pHeader->PixelFormat.GBitMask = 0xffff0000;
+                            break;
+                        case DxgiFormat.B5G5R5A1_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.Rgb | PixelFormatFlags.AlphaPixels;
+                            pHeader->PixelFormat.RgbBitCount = 16;
+                            pHeader->PixelFormat.RBitMask = 0x7c00;
+                            pHeader->PixelFormat.GBitMask = 0x03e0;
+                            pHeader->PixelFormat.BBitMask = 0x001f;
+                            pHeader->PixelFormat.ABitMask = 0x8000;
+                            break;
+                        case DxgiFormat.B5G6R5_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.Rgb;
+                            pHeader->PixelFormat.RgbBitCount = 16;
+                            pHeader->PixelFormat.RBitMask = 0xf800;
+                            pHeader->PixelFormat.GBitMask = 0x07e0;
+                            pHeader->PixelFormat.BBitMask = 0x001f;
+                            break;
+                        case DxgiFormat.A8_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.Alpha;
+                            pHeader->PixelFormat.RgbBitCount = 8;
+                            pHeader->PixelFormat.ABitMask = 0xff;
+                            break;
+                        case DxgiFormat.BC1_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.FourCC;
+                            pHeader->PixelFormat.FourCC = Helper.DXT1;
+                            break;
+                        case DxgiFormat.BC2_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.FourCC;
+                            pHeader->PixelFormat.FourCC = Helper.DXT3;
+                            break;
+                        case DxgiFormat.BC3_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.FourCC;
+                            pHeader->PixelFormat.FourCC = Helper.DXT5;
+                            break;
+                        case DxgiFormat.R8G8_B8G8_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.FourCC;
+                            pHeader->PixelFormat.FourCC = Helper.GRGB;
+                            break;
+                        case DxgiFormat.G8R8_G8B8_UNORM:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.FourCC;
+                            pHeader->PixelFormat.FourCC = Helper.RGBG;
+                            break;
+                        default:
+                            pHeader->PixelFormat.Flags = PixelFormatFlags.FourCC;
+                            pHeader->PixelFormat.FourCC = Helper.DX10;
+                            dx10 = true;
+                            break;
+                    }
+                }
+                else
+                {
+                    dx10 = true;
+                }
+
+                if (dx10)
+                {
+                    var pHeader10 = (HeaderDx10*)(pHeader + 4 + Header.StructLength);
+                    pHeader10->Format = DxgiFormat;
+                    pHeader10->ResourceDimension = Dimension10;
+                    pHeader10->MiscFlags = MiscFlags10;
+                    pHeader10->ArraySize = (uint)Data.Length;
+                }
+            }
+
+            int headersLength = (int)(dx10 ? 4 + Header.StructLength + HeaderDx10.StructLength : 4 + Header.StructLength);
+            stream.Write(headersData, 0, headersLength);
+            foreach (byte[] t in Data)
+                stream.Write(t, 0, t.Length);
+        }
+
+        public void SaveToFile(string fileName)
+        {
+            using (var stream = File.OpenWrite(fileName))
+            {
+                SaveToStream(stream);
             }
         }
 

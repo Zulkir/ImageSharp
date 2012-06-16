@@ -66,7 +66,10 @@ namespace ImageSharp.ConsoleTester
             bmpImage.SaveToFile("output.bmp");*/
 
             var img = new DdsTexture(File.ReadAllBytes("../Textures/Mob.dds"));
+            img.SaveToFile("Mod.dds");
+
             var imgCompressed = new DdsTexture(File.ReadAllBytes("../Textures/Mob_dx3.dds"));
+            imgCompressed.SaveToFile("Mob_dx3.dds");
         }
     }
 }
