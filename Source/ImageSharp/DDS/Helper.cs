@@ -338,6 +338,106 @@ namespace ImageSharp.DDS
             return false;
         }
 
+        public static int FormatBits(DxgiFormat dxgiFormat, D3DFormat d3dFormat)
+        {
+            if (DxgiFormat.R32G32B32A32_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.R32G32B32A32_SINT)
+                return 128;
+            if (DxgiFormat.R32G32B32_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.R32G32B32_SINT)
+                return 96;
+            if (DxgiFormat.R16G16B16A16_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.X32_TYPELESS_G8X24_UINT)
+                return 64;
+            if (DxgiFormat.R10G10B10A2_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.X24_TYPELESS_G8_UINT)
+                return 32;
+            if (DxgiFormat.R8G8_UNORM <= dxgiFormat && dxgiFormat <= DxgiFormat.R16_SINT)
+                return 16;
+            if (DxgiFormat.R8_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.A8_UNORM)
+                return 8;
+            if (DxgiFormat.R9G9B9E5_SHAREDEXP == dxgiFormat)
+                return 32;
+            if (DxgiFormat.R8G8_B8G8_UNORM <= dxgiFormat && dxgiFormat <= DxgiFormat.G8R8_G8B8_UNORM)
+                return 16;
+            if (DxgiFormat.BC1_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.BC1_UNORM_SRGB)
+                return 4;
+            if (DxgiFormat.BC2_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.BC3_UNORM_SRGB)
+                return 8;
+            if (DxgiFormat.BC4_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.BC4_SNORM)
+                return 4;
+            if (DxgiFormat.BC5_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.BC5_SNORM)
+                return 8;
+            if (DxgiFormat.B8G8R8A8_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.B8G8R8X8_UNORM_SRGB)
+                return 32;
+            if (DxgiFormat.BC6H_TYPELESS <= dxgiFormat && dxgiFormat <= DxgiFormat.BC7_UNORM_SRGB)
+                return 8;
+
+            switch (d3dFormat)
+            {
+                case D3DFormat.R8G8B8:
+                    return 24;
+                case D3DFormat.X8R8G8B8:
+                case D3DFormat.A8R8G8B8:
+                case D3DFormat.A2B10G10R10:
+                case D3DFormat.A8B8G8R8:
+                case D3DFormat.X8B8G8R8:
+                case D3DFormat.G16R16:
+                case D3DFormat.A2R10G10B10:
+                case D3DFormat.X8L8V8U8:
+                case D3DFormat.Q8W8V8U8:
+                case D3DFormat.V16U16:
+                case D3DFormat.A2W10V10U10:
+                case D3DFormat.D32:
+                case D3DFormat.D24S8:
+                case D3DFormat.D24X8:
+                case D3DFormat.D24X4S4:
+                case D3DFormat.D32SingleLockable:
+                case D3DFormat.D24SingleS8:
+                case D3DFormat.D32Lockable:
+                case D3DFormat.Index32:
+                case D3DFormat.G16R16F:
+                case D3DFormat.R32F:
+                    return 32;
+                case D3DFormat.R5G6B5:
+                case D3DFormat.X1R5G5B5:
+                case D3DFormat.A1R5G5B5:
+                case D3DFormat.A4R4G4B4:
+                case D3DFormat.A8R3G3B2:
+                case D3DFormat.X4R4G4B4:
+                case D3DFormat.A8P8:
+                case D3DFormat.A8L8:
+                case D3DFormat.V8U8:
+                case D3DFormat.L6V5U5:
+                case D3DFormat.D16Lockable:
+                case D3DFormat.D15S1:
+                case D3DFormat.D16:
+                case D3DFormat.L16:
+                case D3DFormat.Index16:
+                case D3DFormat.R16F:
+                case D3DFormat.CxV8U8:
+                case D3DFormat.Yuy2:
+                case D3DFormat.G8R8_G8B8:
+                case D3DFormat.R8G8_B8G8:
+                case D3DFormat.Uyvy:
+                    return 16;
+                case D3DFormat.R3G3B2:
+                case D3DFormat.A8:
+                case D3DFormat.P8:
+                case D3DFormat.L8:
+                case D3DFormat.A4L4:
+                case D3DFormat.S8Lockable:
+                    return 8;
+                case D3DFormat.A16B16G16R16:
+                case D3DFormat.Q16W16V16U16:
+                case D3DFormat.A16B16G16R16F:
+                case D3DFormat.G32R32F:
+                    return 64;
+                case D3DFormat.A32B32G32R32F:
+                    return 128;
+                case D3DFormat.A1:
+                    return 1;
+            }
+
+            throw new ArgumentException("The format does not have a fixed size");
+        }
+
         public const uint Magic = 0x20534444; // 'DDS '
 
         public const uint DXT1 = ((uint)'D' | (uint)'X' << 8 | (uint)'T' << 16 | (uint)'1' << 24);

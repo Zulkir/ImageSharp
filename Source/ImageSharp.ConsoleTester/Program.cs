@@ -27,6 +27,7 @@ using System;
 using System.IO;
 using System.Text;
 using ImageSharp.BMP;
+using ImageSharp.DDS;
 using ImageSharp.PNG;
 
 namespace ImageSharp.ConsoleTester
@@ -58,10 +59,14 @@ namespace ImageSharp.ConsoleTester
 
         static void Run()
         {
+            /*
             var img = new PngImage(File.ReadAllBytes("../Textures/Kyuubey.png"));
             var bmpImage = new BmpImage(img.Width, img.Height, BPP.ThirtyTwo);
             img.ToRgba8(bmpImage.Data);
-            bmpImage.SaveToFile("output.bmp");
+            bmpImage.SaveToFile("output.bmp");*/
+
+            var img = new DdsTexture(File.ReadAllBytes("../Textures/Mob.dds"));
+            var imgCompressed = new DdsTexture(File.ReadAllBytes("../Textures/Mob_dx3.dds"));
         }
     }
 }
