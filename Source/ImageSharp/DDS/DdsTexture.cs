@@ -106,49 +106,16 @@ namespace ImageSharp.DDS
                         Data = new byte[6][];
 
                         for (int i = 0; i < 6; i++)
+                        {
                             Data[i] = new byte[chainSize];
 
-                        if (pHeader->Caps2.HasFlag(Caps2.CubeMapPositiveX))
-                        {
-                            if (remaining < chainSize) throw new InvalidDataException("File data ends abruptly");
-                            remaining -= chainSize;
-                            Marshal.Copy((IntPtr)p, Data[0], 0, chainSize);
-                            p += chainSize;
-                        }
-                        if (pHeader->Caps2.HasFlag(Caps2.CubeMapNegativeX))
-                        {
-                            if (remaining < chainSize) throw new InvalidDataException("File data ends abruptly");
-                            remaining -= chainSize;
-                            Marshal.Copy((IntPtr)p, Data[1], 0, chainSize);
-                            p += chainSize;
-                        }
-                        if (pHeader->Caps2.HasFlag(Caps2.CubeMapPositiveY))
-                        {
-                            if (remaining < chainSize) throw new InvalidDataException("File data ends abruptly");
-                            remaining -= chainSize;
-                            Marshal.Copy((IntPtr)p, Data[2], 0, chainSize);
-                            p += chainSize;
-                        }
-                        if (pHeader->Caps2.HasFlag(Caps2.CubeMapNegativeY))
-                        {
-                            if (remaining < chainSize) throw new InvalidDataException("File data ends abruptly");
-                            remaining -= chainSize;
-                            Marshal.Copy((IntPtr)p, Data[3], 0, chainSize);
-                            p += chainSize;
-                        }
-                        if (pHeader->Caps2.HasFlag(Caps2.CubeMapPositiveZ))
-                        {
-                            if (remaining < chainSize) throw new InvalidDataException("File data ends abruptly");
-                            remaining -= chainSize;
-                            Marshal.Copy((IntPtr)p, Data[4], 0, chainSize);
-                            p += chainSize;
-                        }
-                        if (pHeader->Caps2.HasFlag(Caps2.CubeMapNegativeZ))
-                        {
-                            if (remaining < chainSize) throw new InvalidDataException("File data ends abruptly");
-                            remaining -= chainSize;
-                            Marshal.Copy((IntPtr)p, Data[5], 0, chainSize);
-                            p += chainSize;
+                            if (pHeader->Caps2.HasFlag(Helper.CubeMapFaces[i]))
+                            {
+                                if (remaining < chainSize) throw new InvalidDataException("File data ends abruptly");
+                                remaining -= chainSize;
+                                Marshal.Copy((IntPtr)p, Data[i], 0, chainSize);
+                                p += chainSize;
+                            }
                         }
 
                         dataAlreadyCopied = true;

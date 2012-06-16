@@ -354,5 +354,11 @@ namespace ImageSharp.DDS
         public const uint UYVY = ((uint)'U' | (uint)'Y' << 8 | (uint)'V' << 16 | (uint)'Y' << 24);
         public const uint YUY2 = ((uint)'Y' | (uint)'U' << 8 | (uint)'Y' << 16 | (uint)'2' << 24);
         public const uint DX10 = ((uint)'D' | (uint)'X' << 8 | (uint)'1' << 16 | (uint)'0' << 24);
+
+        internal static Caps2[] CubeMapFaces = 
+        {
+            Caps2.CubeMapPositiveX, Caps2.CubeMapNegativeX, Caps2.CubeMapPositiveY,
+            Caps2.CubeMapNegativeY, Caps2.CubeMapPositiveZ, Caps2.CubeMapNegativeZ
+        };
     }
 }
