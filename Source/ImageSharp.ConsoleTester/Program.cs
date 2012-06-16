@@ -59,17 +59,16 @@ namespace ImageSharp.ConsoleTester
 
         static void Run()
         {
-            /*
-            var img = new PngImage(File.ReadAllBytes("../Textures/Kyuubey.png"));
-            var bmpImage = new BmpImage(img.Width, img.Height, BPP.ThirtyTwo);
-            img.ToRgba8(bmpImage.Data);
-            bmpImage.SaveToFile("output.bmp");*/
+            var pngImage = new PngImage(File.ReadAllBytes("../Textures/Kyuubey.png"));
+            var bmpImage = new BmpImage(pngImage.Width, pngImage.Height, BPP.ThirtyTwo);
+            pngImage.ToRgba8(bmpImage.Data);
+            bmpImage.SaveToFile("output.bmp");
 
-            var img = new DdsTexture(File.ReadAllBytes("../Textures/Mob.dds"));
-            img.SaveToFile("Mod.dds");
+            var ddsTexture = new DdsTexture(File.ReadAllBytes("../Textures/Mob.dds"));
+            ddsTexture.SaveToFile("Mod.dds");
 
-            var imgCompressed = new DdsTexture(File.ReadAllBytes("../Textures/Mob_dx3.dds"));
-            imgCompressed.SaveToFile("Mob_dx3.dds");
+            var ddsTextureCompressed = new DdsTexture(File.ReadAllBytes("../Textures/Mob_dx3.dds"));
+            ddsTextureCompressed.SaveToFile("Mob_dx3.dds");
         }
     }
 }

@@ -230,6 +230,9 @@ namespace ImageSharp.DDS
 
         public unsafe void SaveToStream(Stream stream)
         {
+            if (DxgiFormat == DxgiFormat.UNKNOWN)
+                throw new NotSupportedException("Saving DDS with unknown DXGI format is not supported");
+
             bool dx10 = false;
 
             var headersData = new byte[4 + Header.StructLength + HeaderDx10.StructLength];
