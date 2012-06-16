@@ -29,7 +29,7 @@ namespace ImageSharp.DDS
 {
     public static class Helper
     {
-        public static void DetermineFormat9(ref PixelFormat pixelFormat, out DxgiFormat dxgiFormat, out D3DFormat d3dFormat)
+        public static void DetermineFormat(ref PixelFormat pixelFormat, out DxgiFormat dxgiFormat, out D3DFormat d3dFormat)
         {
             switch (pixelFormat.Flags)
             {

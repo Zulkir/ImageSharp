@@ -31,15 +31,81 @@ namespace ImageSharp.DDS
 {
     public class DdsTexture
     {
+        public DxgiFormat DxgiFormat { get; private set; }
         public int Width { get; private set; }
         public int Height { get; private set; }
         public int Depth { get; private set; }
-        public DxgiFormat DxgiFormat { get; private set; }
         public D3DFormat D3DFormat { get; private set; }
-        public byte[][] Data { get; private set; }
-        public MipInfo[] MipInfos { get; private set; }
         public ResourceDimension Dimension { get; private set; }
         public ResourceMiscFlags MiscFlags { get; private set; }
+        public byte[][] Data { get; private set; }
+        public MipInfo[] MipInfos { get; private set; }
+
+        public DdsTexture(DxgiFormat dxgiFormat,
+            int width, int height = 1, int depth = 1, 
+            int arraySize = 1, int mipCount = 0,
+            ResourceDimension dimension = ResourceDimension.Unknown, 
+            ResourceMiscFlags miscFlags = 0
+            )
+        {
+            if (dxgiFormat == DxgiFormat.UNKNOWN)
+                throw new ArgumentException("Formats can not be 'unknown'");
+            if (width <= 0)
+                throw new ArgumentException("Width must be greater than zero");
+            if (height <= 0)
+                throw new ArgumentException("Height must be greater than zero");
+            if (depth <= 0)
+                throw new ArgumentException("Depth must be greater than zero");
+            if (arraySize <= 0)
+                throw new ArgumentException("Array size must be greater than zero");
+            if (mipCount < 0)
+                throw new ArgumentException("Mip count must can not be negative");
+            if (dimension != ResourceDimension.Unknown && dimension != ResourceDimension.Texture3D && depth != 1)
+                throw new ArgumentException(string.Format("Dimension is {0}, but Depth is not 1", dimension));
+            if ((dimension == ResourceDimension.Buffer || dimension == ResourceDimension.Texture1D) && height != 1)
+                throw new ArgumentException(string.Format("Dimension is {0}, but Height is not 1", dimension));
+            if (dimension == ResourceDimension.Buffer && mipCount > 1)
+                throw new ArgumentException("Dimension is Buffer, but MipCount is not 0 or 1");
+
+            Width = width;
+            Height = height;
+            Depth = depth;
+
+            if (depth != 1)
+                Dimension = ResourceDimension.Texture3D;
+            else if (height != 1)
+                Dimension = ResourceDimension.Texture2D;
+            else
+                Dimension = ResourceDimension.Texture1D;
+
+            MiscFlags = miscFlags;
+
+            D3DFormat = Helper.D3DFormatFromDxgi(dxgiFormat);
+
+            Data = new byte[arraySize][];
+
+            if (mipCount == 0)
+            {
+                int mipWidth = width;
+                int mipHeight = height;
+                int mipDepth = depth;
+
+                mipCount = 1;
+                while (mipWidth != 1 || mipHeight != 1 || mipDepth != 1)
+                {
+                    if (mipWidth != 1) mipWidth /= 2;
+                    if (mipHeight != 1) mipHeight /= 2;
+                    if (mipDepth != 1) mipDepth /= 2;
+                    mipCount++;
+                }
+            }
+
+            int chainSize;
+            CalculateMipInfos(mipCount, -1, -1, out chainSize);
+
+            for (int i = 0; i < Data.Length; i++)
+                Data[i] = new byte[chainSize];
+        }
 
         public unsafe DdsTexture(byte[] fileData, int byteOffset = 0)
         {
@@ -76,8 +142,7 @@ namespace ImageSharp.DDS
                 Width = (int)pHeader->Width;
                 Height = (int)pHeader->Height;
                 Depth = pHeader->Flags.HasFlag(HeaderFlags.Depth) ? (int)pHeader->Depth : 1;
-                
-                int mipCount = pHeader->Flags.HasFlag(HeaderFlags.MipMapCount) ? (int) pHeader->MipMapCount : 1;
+
                 int chainSize;
                 bool dataAlreadyCopied = false;
 
@@ -91,11 +156,15 @@ namespace ImageSharp.DDS
 
                     DxgiFormat dxgiFormat;
                     D3DFormat d3dFormat;
-                    Helper.DetermineFormat9(ref pHeader->PixelFormat, out dxgiFormat, out d3dFormat);
+                    Helper.DetermineFormat(ref pHeader->PixelFormat, out dxgiFormat, out d3dFormat);
                     DxgiFormat = dxgiFormat;
                     D3DFormat = d3dFormat;
 
-                    CalculateMipInfos(pHeader, out chainSize);
+                    CalculateMipInfos(
+                        pHeader->Flags.HasFlag(HeaderFlags.MipMapCount) ? (int)pHeader->MipMapCount : -1,
+                        pHeader->Flags.HasFlag(HeaderFlags.Pitch) ? (int)pHeader->LinearSize : -1,
+                        pHeader->Flags.HasFlag(HeaderFlags.LinearSize) ? (int)pHeader->LinearSize : -1,
+                        out chainSize);
 
                     if (!(pHeader->Caps.HasFlag(Caps.Complex) && pHeader->Caps2.HasFlag(Caps2.CubeMap)))
                     {
@@ -138,7 +207,11 @@ namespace ImageSharp.DDS
                     DxgiFormat = pHeaderDx10->Format;
                     D3DFormat = Helper.D3DFormatFromDxgi(DxgiFormat);
 
-                    CalculateMipInfos(pHeader, out chainSize);
+                    CalculateMipInfos(
+                        pHeader->Flags.HasFlag(HeaderFlags.MipMapCount) ? (int)pHeader->MipMapCount : -1,
+                        pHeader->Flags.HasFlag(HeaderFlags.Pitch) ? (int)pHeader->LinearSize : -1,
+                        pHeader->Flags.HasFlag(HeaderFlags.LinearSize) ? (int)pHeader->LinearSize : -1,
+                        out chainSize);
 
                     Data = new byte[pHeaderDx10->ArraySize][];
                 }
@@ -160,29 +233,26 @@ namespace ImageSharp.DDS
             }
         }
 
-        unsafe void CalculateMipInfos(Header* header, out int chainSize)
+        void CalculateMipInfos(int mipCount, int pitch, int linearSize, out int chainSize)
         {
             if (Helper.IsFormatCompressed(DxgiFormat, D3DFormat))
-                CalculateMipInfosCompressed(header, out chainSize);
+                CalculateMipInfosCompressed(mipCount, linearSize, out chainSize);
             else
-                CalculateMipInfosNoncompressed(header, out chainSize);
+                CalculateMipInfosNoncompressed(mipCount, pitch, out chainSize);
         }
 
-        unsafe void CalculateMipInfosNoncompressed(Header* header, out int chainSize)
+        unsafe void CalculateMipInfosNoncompressed(int mipCount, int pitch, out int chainSize)
         {
-            int mipCount = header->Flags.HasFlag(HeaderFlags.MipMapCount) ? (int)header->MipMapCount : 1;
+            if (mipCount == -1)
+                mipCount = 1;
+
             int bytesPerPixel = Helper.FormatBits(DxgiFormat, D3DFormat) / 8;
 
-            int rowPitch;
-            if (header->Flags.HasFlag(HeaderFlags.Pitch))
+            if (pitch == -1)
             {
-                rowPitch = (int)header->LinearSize;
-            }
-            else
-            {
-                rowPitch = Width * bytesPerPixel;
-                if ((rowPitch & 0x3) != 0)
-                    rowPitch += 4 - (rowPitch & 0x3);
+                pitch = Width * bytesPerPixel;
+                if ((pitch & 0x3) != 0)
+                    pitch += 4 - (pitch & 0x3);
             }
 
             MipInfos = new MipInfo[mipCount];
@@ -194,7 +264,7 @@ namespace ImageSharp.DDS
                     Height = Height,
                     Depth = Depth,
                     OffsetInBytes = 0,
-                    SizeInBytes = Height * rowPitch
+                    SizeInBytes = Height * pitch
                 };
 
                 for (int i = 1; i < mipCount; i++)
@@ -207,20 +277,21 @@ namespace ImageSharp.DDS
                         OffsetInBytes = infos[i - 1].OffsetInBytes + infos[i - 1].SizeInBytes,
                     };
 
-                    int pitch = infos[i].Width * bytesPerPixel;
-                    if ((pitch & 0x3) != 0)
-                        pitch += 4 - (pitch & 0x3);
+                    int mipPitch = infos[i].Width * bytesPerPixel;
+                    if ((mipPitch & 0x3) != 0)
+                        mipPitch += 4 - (mipPitch & 0x3);
 
-                    infos[i].SizeInBytes = pitch * infos[i].Height * infos[i].Depth;
+                    infos[i].SizeInBytes = mipPitch * infos[i].Height * infos[i].Depth;
                 }
 
                 chainSize = infos[mipCount - 1].OffsetInBytes + infos[mipCount - 1].SizeInBytes;
             }
         }
 
-        unsafe void CalculateMipInfosCompressed(Header* header, out int chainSize)
+        unsafe void CalculateMipInfosCompressed(int mipCount, int linearSize, out int chainSize)
         {
-            int mipCount = header->Flags.HasFlag(HeaderFlags.MipMapCount) ? (int)header->MipMapCount : 1;
+            if (mipCount == -1)
+                mipCount = 1;
 
             int multiplyer =
                         DxgiFormat == DxgiFormat.BC1_TYPELESS || DxgiFormat == DxgiFormat.BC1_UNORM ||
@@ -228,9 +299,8 @@ namespace ImageSharp.DDS
                             ? 8
                             : 16;
 
-            int linearSize = header->Flags.HasFlag(HeaderFlags.LinearSize)
-                ? (int)header->LinearSize 
-                : Math.Max(1, Width/4)*Math.Max(1, Height/4)*multiplyer;
+            if (linearSize == -1)
+                linearSize = Math.Max(1, Width / 4) * Math.Max(1, Height / 4) * multiplyer;
 
             MipInfos = new MipInfo[mipCount];
             fixed (MipInfo* infos = MipInfos)
