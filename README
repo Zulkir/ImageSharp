@@ -1,3 +1,2 @@
-ImageSharp is a standalone managed library for loading images of different formats.
-It allows you to load images using only managed code, and thus, avoiding many unexpected crashes in libgdiplus when running under Mono.
+ImageSharp is a standalone library for loading images of different formats using managed code only.
 Two main formats that are going to be supported are PNG and DDS, but feel free to fork this project to introduce support for more formats.
